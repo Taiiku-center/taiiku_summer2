@@ -1,12 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSession, clearSession, PERIOD_START, PERIOD_END, type Student } from '../lib'
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
-}
+import { getSession, clearSession, type Student } from '../lib'
 
 export default function ParentHomePage() {
   const router = useRouter()
@@ -18,69 +13,47 @@ export default function ParentHomePage() {
     setStudent(s)
   }, [router])
 
-  function handleLogout() {
-    clearSession()
-    router.replace('/login')
-  }
-
-  if (!student) return null
+  if (!student) return <div className="min-h-screen flex items-center justify-center text-gray-400">読み込み中...</div>
 
   const menus = [
-    {
-      title: '授業を申し込む',
-      desc: '希望の日時を選んで申込み',
-      href: '/parent/schedule',
-      bg: 'bg-blue-500',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-          <rect x="7" y="14" width="3" height="3" rx="0.5" fill="white" stroke="none"/>
-          <rect x="10.5" y="14" width="3" height="3" rx="0.5" fill="white" stroke="none"/>
-          <rect x="14" y="14" width="3" height="3" rx="0.5" fill="white" stroke="none"/>
-        </svg>
-      ),
-    },
+    { label: '授業を申し込む',       sub: '希望の日時を選んで申込み',   emoji: '📅', href: '/parent/schedule',   bg: 'bg-blue-500',   shadow: 'shadow-blue-100' },
+    { label: '欠席・遅刻を連絡する', sub: '欠席・遅刻・振替希望の連絡', emoji: '📢', href: '/parent/absence',    bg: 'bg-orange-500', shadow: 'shadow-orange-100' },
+    { label: '授業予定を確認する',   sub: '申込み済みの授業カレンダー', emoji: '📋', href: '/parent/calendar',   bg: 'bg-green-500',  shadow: 'shadow-green-100' },
+    { label: '不具合を報告する',     sub: 'アプリの不具合・お困りの際', emoji: '🔧', href: '/parent/bug-report', bg: 'bg-gray-500',   shadow: 'shadow-gray-100' },
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <div className="text-base font-bold text-gray-800">📅 授業申込み</div>
-          <div className="text-sm text-gray-400">{student.full_name} さん</div>
+          <h1 className="text-lg font-bold text-gray-800">📅 授業申込み</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{student.full_name} さん</p>
         </div>
-        <button onClick={handleLogout}
-          className="text-sm text-gray-500 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+        <button onClick={() => { clearSession(); router.replace('/login') }}
+          className="text-sm text-gray-400 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors">
           ログアウト
         </button>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* タイトル */}
-        <div className="text-center space-y-1 py-4">
-          <div className="text-4xl mb-3">📅</div>
-          <h1 className="text-2xl font-bold text-gray-800">2026年 授業申込み</h1>
-          <p className="text-sm text-gray-400">
-            {formatDate(PERIOD_START)} 〜 {formatDate(PERIOD_END)}
-          </p>
+      <main className="px-4 py-8 max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="text-4xl mb-2">📅</div>
+          <h2 className="text-xl font-bold text-gray-800">2026年 授業申込み</h2>
+          <p className="text-sm text-gray-400 mt-1">7月20日（月）〜 8月29日（土）</p>
         </div>
 
-        {/* メニュー */}
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {menus.map(m => (
             <button key={m.href} onClick={() => router.push(m.href)}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 text-left hover:shadow-md active:scale-[0.98] transition-all">
-              <div className={`${m.bg} w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                {m.icon}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-6 flex items-center gap-4 hover:shadow-md active:scale-[0.98] transition-all text-left">
+              <div className={`w-14 h-14 ${m.bg} rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-sm ${m.shadow}`}>
+                {m.emoji}
               </div>
-              <div>
-                <div className="font-bold text-gray-800 text-base">{m.title}</div>
-                <div className="text-sm text-gray-400 mt-0.5">{m.desc}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-base font-bold text-gray-800">{m.label}</div>
+                <div className="text-sm text-gray-400 mt-0.5">{m.sub}</div>
               </div>
-              <div className="ml-auto text-gray-300 text-xl">›</div>
+              <span className="text-gray-300 text-xl flex-shrink-0">›</span>
             </button>
           ))}
         </div>
