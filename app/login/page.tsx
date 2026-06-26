@@ -34,7 +34,7 @@ export default function LoginPage() {
         return
       }
       setSession(data)
-      router.push('/parent/schedule')
+      router.push('/parent')
     } catch {
       setError('通信エラーが発生しました。再度お試しください')
       setLoading(false)
