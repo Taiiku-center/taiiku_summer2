@@ -104,7 +104,7 @@ export default function SchedulePage() {
         message: `${student.full_name}（${count}コマ）`, is_read: false,
       })
       for (const row of rows) {
-        sendEmail('【夏期講習】新しい授業申込み', `${student.full_name} さんが授業を申し込みました。\n日付：${row.date}\n時間：${row.start_time}〜${row.end_time}\n管理画面でご確認ください。`)
+        sendEmail(`【申込】${student.full_name} ${row.date} ${row.start_time}〜`, `${student.full_name} さんが授業を申し込みました。\n日付：${row.date}\n時間：${row.start_time}〜${row.end_time}\n管理画面でご確認ください。`)
       }
     }
     setSaving(false)

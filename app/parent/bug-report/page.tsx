@@ -43,7 +43,7 @@ export default function BugReportPage() {
       type: 'bug', title: '不具合報告が届きました',
       message: `${student.full_name}（${screenName}）`, is_read: false,
     })
-    sendEmail('【夏期講習】不具合報告', `${student.full_name} さんから不具合報告がありました。\n画面：${screenName}\n内容：${description.trim()}\n管理画面でご確認ください。`)
+    sendEmail(`【不具合】${student.full_name} ${screenName}`, `${student.full_name} さんから不具合報告がありました。\n画面：${screenName}\n内容：${description.trim()}\n管理画面でご確認ください。`)
     setDone(true); setSubmitting(false)
   }
 
