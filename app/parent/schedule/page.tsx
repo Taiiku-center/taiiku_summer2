@@ -45,15 +45,11 @@ export default function SchedulePage() {
   // Touch long press & drag
   const longPressTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressTouchClick = useRef(false)
-  const gridScrollRef      = useRef<HTMLDivElement>(null)
-
-  // 長押しドラッグ中は縦横問わずスクロールを止めてセル選択を優先
+  // 長押しドラッグ中はページ全体のスクロールを止めてセル選択を優先
   useEffect(() => {
-    const el = gridScrollRef.current
-    if (!el) return
     const onTouchMove = (e: TouchEvent) => { if (dragActive.current) e.preventDefault() }
-    el.addEventListener('touchmove', onTouchMove, { passive: false })
-    return () => el.removeEventListener('touchmove', onTouchMove)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => document.removeEventListener('touchmove', onTouchMove)
   }, [])
 
   useEffect(() => {
@@ -293,7 +289,7 @@ export default function SchedulePage() {
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />申込済（タップで変更・キャンセル）</div>
             </div>
-            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押し（1.5秒）でドラッグ複数選択</div>
+            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押し（1.2秒）でドラッグ複数選択</div>
           </div>
         )}
 
@@ -306,7 +302,6 @@ export default function SchedulePage() {
               onPointerUp={onCellPointerUp}
               onPointerLeave={onCellPointerUp}>
               <div
-                ref={gridScrollRef}
                 className="min-w-[360px] overflow-y-auto"
                 style={{ maxHeight: '65vh', WebkitUserSelect: 'none', userSelect: 'none' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>

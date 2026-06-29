@@ -17,6 +17,10 @@ async function sendEmail(subject: string, body: string) {
 
 type Item = { date: string; time: string }
 
+function formatDate(ds: string) {
+  return new Date(ds + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
+}
+
 export default function AbsencePage() {
   const router = useRouter()
   const [student, setStudent]       = useState<Student | null>(null)
@@ -77,9 +81,8 @@ export default function AbsencePage() {
         date: item.date, time: item.time, type, make_up_request: makeUp, note,
       })
       const notifType = type === '欠席' ? 'absence' : 'late'
-      const notifTitle = type === '欠席' ? '欠席連絡がありました' : '遅刻連絡がありました'
       await supabase.from('summer_notifications').insert({
-        type: notifType, title: notifTitle,
+        type: notifType, title: type === '欠席' ? '欠席連絡がありました' : '遅刻連絡がありました',
         message: `${student.full_name}（${item.date} ${item.time}〜）`, is_read: false,
       })
       if (makeUp === '希望する') {
@@ -88,19 +91,14 @@ export default function AbsencePage() {
           message: `${student.full_name}（${item.date} ${item.time}〜）`, is_read: false,
         })
       }
-      const makeupText = makeUp === '希望する' ? '\n振替：希望する' : ''
       sendEmail(
         `【${type}】${student.full_name} ${item.date} ${item.time}〜`,
-        `${student.full_name} さんから${type}の連絡がありました。\n日付：${item.date}\n時間：${item.time}〜${makeupText}\n管理画面でご確認ください。`,
+        `${student.full_name} さんから${type}の連絡がありました。\n日付：${item.date}\n時間：${item.time}〜${makeUp === '希望する' ? '\n振替：希望する' : ''}\n管理画面でご確認ください。`,
       )
     }
     setDoneItems([...items])
     setDone(true)
     setSubmitting(false)
-  }
-
-  function formatDate(ds: string) {
-    return new Date(ds + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
   }
 
   if (!student) return null
@@ -163,56 +161,56 @@ export default function AbsencePage() {
           </div>
         </div>
 
-        {/* 日時追加 */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-600">対象の日時を追加</h2>
-            <button onClick={addItem} disabled={!date || slots.length === 0}
-              className="bg-orange-500 text-white text-sm font-bold px-4 py-1.5 rounded-xl active:bg-orange-600 disabled:opacity-40 transition-colors">
-              ＋ 追加
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1.5">日付</label>
-              <input type="date" value={date} onChange={e => handleDateChange(e.target.value)}
-                min={PERIOD_START} max={PERIOD_END}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-blue-400 transition-colors" />
+        {/* 日時追加カード（積み重なり型） */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {/* 追加済みアイテム */}
+          {items.map((item, i) => (
+            <div key={i} className="flex items-center gap-3 px-5 py-4 border-b border-orange-100 bg-orange-50">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-800 truncate">{formatDate(item.date)}</div>
+                <div className="text-xs text-orange-600 font-medium">{item.time}〜</div>
+              </div>
+              <button onClick={() => removeItem(i)}
+                className="flex-shrink-0 text-gray-400 active:text-red-500 text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors">
+                ×
+              </button>
             </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1.5">時間</label>
-              {slots.length > 0 ? (
-                <select value={time} onChange={e => setTime(e.target.value)}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-blue-400 bg-white transition-colors">
-                  {slots.map(s => <option key={s} value={s}>{s}〜</option>)}
-                </select>
-              ) : (
-                <div className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-400 bg-gray-50">
-                  この曜日は授業がありません
-                </div>
-              )}
+          ))}
+
+          {/* 入力行 */}
+          <div className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-600">
+                {items.length === 0 ? '対象の日時を追加' : '続けて追加'}
+              </h2>
+              <button onClick={addItem} disabled={!date || slots.length === 0}
+                className="flex-shrink-0 bg-orange-500 text-white text-sm font-bold px-4 py-1.5 rounded-xl active:bg-orange-600 disabled:opacity-40 transition-colors">
+                ＋ 追加
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">日付</label>
+                <input type="date" value={date} onChange={e => handleDateChange(e.target.value)}
+                  min={PERIOD_START} max={PERIOD_END}
+                  className="w-full min-w-0 border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">時間</label>
+                {slots.length > 0 ? (
+                  <select value={time} onChange={e => setTime(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 bg-white transition-colors">
+                    {slots.map(s => <option key={s} value={s}>{s}〜</option>)}
+                  </select>
+                ) : (
+                  <div className="w-full border-2 border-gray-100 rounded-xl px-3 py-2.5 text-sm text-gray-400 bg-gray-50">
+                    この曜日は授業がありません
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* 追加済みリスト */}
-        {items.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
-            <h2 className="text-sm font-semibold text-gray-600 mb-3">追加済みの日時（{items.length}件）</h2>
-            {items.map((item, i) => (
-              <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-4 py-3">
-                <div>
-                  <div className="text-sm font-semibold text-gray-700">{formatDate(item.date)}</div>
-                  <div className="text-xs text-orange-600 font-medium">{item.time}〜</div>
-                </div>
-                <button onClick={() => removeItem(i)}
-                  className="text-gray-400 hover:text-red-500 text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg active:bg-red-50 transition-colors">
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* 振替 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -240,7 +238,7 @@ export default function AbsencePage() {
 
         <button onClick={handleSubmit} disabled={submitting || items.length === 0}
           className="w-full bg-orange-500 text-white font-bold text-lg py-5 rounded-2xl disabled:opacity-40 active:scale-95 hover:bg-orange-600 transition-all shadow-lg">
-          {submitting ? '送信中...' : items.length > 0 ? `${type}を連絡する（${items.length}件）` : `日時を追加してください`}
+          {submitting ? '送信中...' : items.length > 0 ? `${type}を連絡する（${items.length}件）` : '日時を追加してください'}
         </button>
       </main>
     </div>
