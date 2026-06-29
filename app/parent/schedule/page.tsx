@@ -326,7 +326,7 @@ export default function SchedulePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={() => { router.replace('/login') }} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold active:bg-gray-200">← 戻る</button>
+          <button onClick={() => router.back()} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold active:bg-gray-200">← 戻る</button>
           <h1 className="text-base font-bold text-gray-800">授業を申し込む</h1>
           {view === 'week' && (
             <button

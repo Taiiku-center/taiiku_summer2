@@ -26,7 +26,7 @@ export default function ParentHomePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-lg font-bold text-gray-800">📅 授業申込み</h1>
+          <h1 className="text-lg font-bold text-gray-800">☀️ 夏期講習</h1>
           <p className="text-xs text-gray-400 mt-0.5">{student.full_name} さん</p>
         </div>
         <button onClick={() => { clearSession(); router.replace('/login') }}
@@ -37,8 +37,8 @@ export default function ParentHomePage() {
 
       <main className="px-4 py-8 max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">📅</div>
-          <h2 className="text-xl font-bold text-gray-800">2026年 授業申込み</h2>
+          <div className="text-4xl mb-2">☀️</div>
+          <h2 className="text-xl font-bold text-gray-800">2026年 夏期講習</h2>
           <p className="text-sm text-gray-400 mt-1">7月20日（月）〜 8月29日（土）</p>
         </div>
 

@@ -45,8 +45,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex flex-col items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">📅</div>
-          <h1 className="text-2xl font-bold text-gray-800">授業申込み</h1>
+          <div className="text-5xl mb-3">☀️</div>
+          <h1 className="text-2xl font-bold text-gray-800">夏期講習</h1>
           <p className="text-sm text-gray-400 mt-1">2026年 大育進学センター</p>
         </div>
 
