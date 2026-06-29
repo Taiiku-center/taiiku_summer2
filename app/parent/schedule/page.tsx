@@ -38,9 +38,13 @@ export default function SchedulePage() {
   const [cancelModal, setCancelModal] = useState<Lesson | null>(null)
   const [cancelConfirm, setCancelConfirm] = useState(false)
 
-  const dragActive        = useRef(false)
-  const paintV            = useRef(true)
-  const suppressNextClick = useRef(false)
+  // PC drag
+  const dragActive         = useRef(false)
+  const paintV             = useRef(true)
+  const suppressNextClick  = useRef(false)
+  // Touch long press & drag
+  const longPressTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressTouchClick = useRef(false)
 
   useEffect(() => {
     const s = getSession()
@@ -133,6 +137,54 @@ export default function SchedulePage() {
     setSelected(prev => { const n = new Set(prev); paintV.current ? n.add(k) : n.delete(k); return n })
   }
 
+  function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
+  function isBlocked(d: Date, slot: string) { return !isSlotAvailable(d.getDay(), slot) }
+
+  function onCellPointerDown(e: React.PointerEvent, d: Date, slot: string) {
+    if (!isInPeriod(d) || isBlocked(d, slot)) return
+    if (e.pointerType === 'mouse') {
+      suppressNextClick.current = true
+      const lesson = existingAt(d, slot)
+      if (lesson) { setCancelModal(lesson); return }
+      paintV.current = !selected.has(key(d, slot))
+      dragActive.current = true
+      paintCell(d, slot)
+    } else {
+      // タッチ: 1.5秒長押しでドラッグ開始
+      longPressTimer.current = setTimeout(() => {
+        longPressTimer.current = null
+        if (navigator.vibrate) navigator.vibrate(50)
+        const lesson = existingAt(d, slot)
+        if (lesson) return
+        suppressTouchClick.current = true
+        paintV.current = !selected.has(key(d, slot))
+        dragActive.current = true
+        paintCell(d, slot)
+      }, 1500)
+    }
+  }
+
+  function onCellPointerMove(e: React.PointerEvent) {
+    if (!dragActive.current) return
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+    const ds2 = el?.dataset.ds, slot2 = el?.dataset.slot
+    if (!ds2 || !slot2) return
+    const [y, mo, d2] = ds2.split('-').map(Number)
+    paintCell(new Date(y, mo - 1, d2), slot2)
+  }
+
+  function onCellPointerUp() {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+    dragActive.current = false
+  }
+
+  function handleCellClick(d: Date, slot: string) {
+    if (suppressNextClick.current) { suppressNextClick.current = false; return }
+    if (suppressTouchClick.current) { suppressTouchClick.current = false; return }
+    if (!isInPeriod(d) || isBlocked(d, slot)) return
+    toggleCell(d, slot)
+  }
+
   function canGoPrev() {
     if (view === 'month') return !(current.getFullYear() === 2026 && current.getMonth() === 6)
     if (view === 'week') {
@@ -180,9 +232,6 @@ export default function SchedulePage() {
     return DAYS_JP.map((_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d })
   }
 
-  function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
-  function isBlocked(d: Date, slot: string) { return !isSlotAvailable(d.getDay(), slot) }
-
   function displayTitle() {
     const wd = weekDates()
     if (view === 'month') return `${current.getFullYear()}年${current.getMonth() + 1}月`
@@ -193,169 +242,12 @@ export default function SchedulePage() {
 
   if (!student) return null
 
-  const WeekGrid = () => {
-    const wd = weekDates()
-
-    // PCのみ: マウスドラッグで複数選択
-    function onPointerDown(e: React.PointerEvent, d: Date, slot: string) {
-      if (e.pointerType !== 'mouse') return
-      if (!isInPeriod(d) || isBlocked(d, slot)) return
-      suppressNextClick.current = true
-      const lesson = existingAt(d, slot)
-      if (lesson) { setCancelModal(lesson); return }
-      paintV.current = !selected.has(key(d, slot))
-      dragActive.current = true
-      paintCell(d, slot)
-    }
-
-    function onPointerMove(e: React.PointerEvent) {
-      if (!dragActive.current) return
-      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-      const ds2 = el?.dataset.ds, slot2 = el?.dataset.slot
-      if (!ds2 || !slot2) return
-      const [y, mo, d2] = ds2.split('-').map(Number)
-      paintCell(new Date(y, mo - 1, d2), slot2)
-    }
-
-    function onPointerUp() { dragActive.current = false }
-
-    // タッチ・PC共通: タップ／クリックで1コマ選択
-    function handleClick(d: Date, slot: string) {
-      if (suppressNextClick.current) { suppressNextClick.current = false; return }
-      if (!isInPeriod(d) || isBlocked(d, slot)) return
-      toggleCell(d, slot)
-    }
-
-    return (
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden select-none">
-        <div
-          className="overflow-x-auto"
-          onContextMenu={e => e.preventDefault()}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}>
-          <div
-            className="min-w-[360px] overflow-y-auto"
-            style={{ maxHeight: '65vh', WebkitUserSelect: 'none', userSelect: 'none' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
-              <div className="border-b border-r border-gray-200 bg-white sticky top-0 left-0 z-20" />
-              {wd.slice(0, 6).map((d, i) => {
-                const inP = isInPeriod(d)
-                return (
-                  <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
-                    ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
-                    {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
-                  </div>
-                )
-              })}
-              {TIME_SLOTS.map(slot => (
-                <div key={slot} className="contents">
-                  <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
-                    {slot}
-                  </div>
-                  {wd.slice(0, 6).map((d, di) => {
-                    const lesson = existingAt(d, slot)
-                    const sel = selected.has(key(d, slot))
-                    const inP = isInPeriod(d)
-                    const blocked = isBlocked(d, slot)
-                    return (
-                      <div key={di}
-                        data-ds={toDateStr(d)} data-slot={slot}
-                        onPointerDown={e => onPointerDown(e, d, slot)}
-                        onPointerMove={onPointerMove}
-                        onPointerUp={onPointerUp}
-                        onClick={() => handleClick(d, slot)}
-                        className={`border-b border-r border-gray-200 h-10 transition-colors
-                          ${!inP || blocked ? 'bg-gray-50 cursor-not-allowed' :
-                            lesson ? 'bg-teal-400 active:bg-teal-300 cursor-pointer' :
-                            sel ? 'bg-blue-400 cursor-pointer' :
-                            'hover:bg-blue-50 active:bg-blue-100 cursor-pointer'}`}
-                        style={blocked ? { backgroundImage: 'repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 1px, transparent 1px, transparent 6px)' } : undefined}
-                      />
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const MonthGrid = () => {
-    const y = current.getFullYear(), m = current.getMonth()
-    const first = new Date(y, m, 1), last = new Date(y, m+1, 0)
-    const firstDow = first.getDay() === 0 ? 0 : first.getDay() - 1
-    const submittedDates = new Set(existing.map(l => l.date))
-    const allDays: Date[] = []
-    for (let d = 1; d <= last.getDate(); d++) {
-      const date = new Date(y, m, d)
-      if (date.getDay() !== 0) allDays.push(date)
-    }
-    const cells: (Date|null)[] = [...Array(firstDow).fill(null), ...allDays]
-    while (cells.length % 6 !== 0) cells.push(null)
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-4">
-        <div className="grid grid-cols-6 mb-1">
-          {['月','火','水','木','金','土'].map((d, i) => (
-            <div key={d} className={`text-center text-xs font-bold py-2 ${i===5?'text-blue-500':'text-gray-500'}`}>{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-6 gap-1">
-          {cells.map((d, i) => {
-            if (!d) return <div key={i} />
-            const ds = toDateStr(d), has = submittedDates.has(ds)
-            const inP = isInPeriod(d)
-            const isToday = ds === toDateStr(new Date()), dow = d.getDay()
-            return (
-              <button key={i} disabled={!inP} onClick={() => { if (inP) { setCurrent(d); setView('week') } }}
-                className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors
-                  ${!inP ? 'text-gray-200' : isToday ? 'bg-blue-600 text-white' :
-                    dow===6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100'}`}>
-                {d.getDate()}
-                {has && inP && <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-teal-500'}`} />}
-              </button>
-            )
-          })}
-        </div>
-        <p className="text-xs text-gray-400 mt-3 text-center">
-          日付をタップすると週ビューに切り替わります{submittedDates.size > 0 ? '（● = 申込済）' : ''}
-        </p>
-      </div>
-    )
-  }
-
-  const DayList = () => {
-    const dow = current.getDay()
-    const slots = TIME_SLOTS.filter(s => isSlotAvailable(dow, s))
-    if (slots.length === 0) return (
-      <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400">この曜日は授業がありません</div>
-    )
-    return (
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        {slots.map(slot => {
-          const lesson = existingAt(current, slot)
-          const sel = selected.has(key(current, slot))
-          return (
-            <button key={slot} onClick={() => toggleCell(current, slot)}
-              className={`w-full flex items-center gap-4 px-5 py-4 border-b border-gray-100 text-left transition-colors active:opacity-70
-                ${lesson ? 'bg-teal-50' : sel ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-              <span className="text-sm font-medium text-gray-500 w-14 flex-shrink-0">{slot}</span>
-              <div className={`flex-1 h-2.5 rounded-full ${lesson ? 'bg-teal-400' : sel ? 'bg-blue-400' : 'bg-gray-100'}`} />
-              {lesson && <span className="text-xs font-semibold text-teal-600 flex-shrink-0">申込済 ✕</span>}
-              {!lesson && sel && <span className="text-xs font-semibold text-blue-600 flex-shrink-0">選択中</span>}
-            </button>
-          )
-        })}
-      </div>
-    )
-  }
+  const wd = weekDates()
 
   function formatCancelInfo(lesson: Lesson) {
     const d = new Date(lesson.date + 'T12:00:00')
     const dateStr = d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
-    const timeStr = `${lesson.start_time}〜${lesson.end_time}`
-    return { dateStr, timeStr }
+    return { dateStr, timeStr: `${lesson.start_time}〜${lesson.end_time}` }
   }
 
   return (
@@ -386,16 +278,141 @@ export default function SchedulePage() {
         </div>
 
         {view !== 'month' && (
-          <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-            <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
-            <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />申込済（タップで変更・キャンセル）</div>
-            <div className="text-gray-400">コマをタップして選択できます</div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+              <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
+              <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />申込済（タップで変更・キャンセル）</div>
+            </div>
+            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押し（1.5秒）でドラッグ複数選択</div>
           </div>
         )}
 
-        {view === 'week' && <WeekGrid />}
-        {view === 'month' && <MonthGrid />}
-        {view === 'day' && <DayList />}
+        {/* 週グリッド: JSXをインラインで記述することでstate更新時の再マウントを防止 */}
+        {view === 'week' && (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden select-none">
+            <div
+              className="overflow-x-auto"
+              onContextMenu={e => e.preventDefault()}
+              onPointerUp={onCellPointerUp}
+              onPointerLeave={onCellPointerUp}>
+              <div
+                className="min-w-[360px] overflow-y-auto"
+                style={{ maxHeight: '65vh', WebkitUserSelect: 'none', userSelect: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
+                  <div className="border-b border-r border-gray-200 bg-white sticky top-0 left-0 z-20" />
+                  {wd.slice(0, 6).map((d, i) => {
+                    const inP = isInPeriod(d)
+                    return (
+                      <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
+                        ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
+                        {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
+                      </div>
+                    )
+                  })}
+                  {TIME_SLOTS.map(slot => (
+                    <div key={slot} className="contents">
+                      <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
+                        {slot}
+                      </div>
+                      {wd.slice(0, 6).map((d, di) => {
+                        const lesson = existingAt(d, slot)
+                        const sel = selected.has(key(d, slot))
+                        const inP = isInPeriod(d)
+                        const blocked = isBlocked(d, slot)
+                        return (
+                          <div key={di}
+                            data-ds={toDateStr(d)} data-slot={slot}
+                            onPointerDown={e => onCellPointerDown(e, d, slot)}
+                            onPointerMove={onCellPointerMove}
+                            onPointerUp={onCellPointerUp}
+                            onClick={() => handleCellClick(d, slot)}
+                            className={`border-b border-r border-gray-200 h-10 transition-colors
+                              ${!inP || blocked ? 'bg-gray-50 cursor-not-allowed' :
+                                lesson ? 'bg-teal-400 active:bg-teal-300 cursor-pointer' :
+                                sel ? 'bg-blue-400 cursor-pointer' :
+                                'hover:bg-blue-50 active:bg-blue-100 cursor-pointer'}`}
+                            style={blocked ? { backgroundImage: 'repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 1px, transparent 1px, transparent 6px)' } : undefined}
+                          />
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 月グリッド */}
+        {view === 'month' && (() => {
+          const y = current.getFullYear(), m = current.getMonth()
+          const first = new Date(y, m, 1), last = new Date(y, m+1, 0)
+          const firstDow = first.getDay() === 0 ? 0 : first.getDay() - 1
+          const submittedDates = new Set(existing.map(l => l.date))
+          const allDays: Date[] = []
+          for (let d = 1; d <= last.getDate(); d++) {
+            const date = new Date(y, m, d)
+            if (date.getDay() !== 0) allDays.push(date)
+          }
+          const cells: (Date|null)[] = [...Array(firstDow).fill(null), ...allDays]
+          while (cells.length % 6 !== 0) cells.push(null)
+          return (
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <div className="grid grid-cols-6 mb-1">
+                {['月','火','水','木','金','土'].map((d, i) => (
+                  <div key={d} className={`text-center text-xs font-bold py-2 ${i===5?'text-blue-500':'text-gray-500'}`}>{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-6 gap-1">
+                {cells.map((d, i) => {
+                  if (!d) return <div key={i} />
+                  const ds = toDateStr(d), has = submittedDates.has(ds)
+                  const inP = isInPeriod(d)
+                  const isToday = ds === toDateStr(new Date()), dow = d.getDay()
+                  return (
+                    <button key={i} disabled={!inP} onClick={() => { if (inP) { setCurrent(d); setView('week') } }}
+                      className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors
+                        ${!inP ? 'text-gray-200' : isToday ? 'bg-blue-600 text-white' :
+                          dow===6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      {d.getDate()}
+                      {has && inP && <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-teal-500'}`} />}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-gray-400 mt-3 text-center">
+                日付をタップすると週ビューに切り替わります{submittedDates.size > 0 ? '（● = 申込済）' : ''}
+              </p>
+            </div>
+          )
+        })()}
+
+        {/* 日リスト */}
+        {view === 'day' && (() => {
+          const dow = current.getDay()
+          const slots = TIME_SLOTS.filter(s => isSlotAvailable(dow, s))
+          if (slots.length === 0) return (
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400">この曜日は授業がありません</div>
+          )
+          return (
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              {slots.map(slot => {
+                const lesson = existingAt(current, slot)
+                const sel = selected.has(key(current, slot))
+                return (
+                  <button key={slot} onClick={() => toggleCell(current, slot)}
+                    className={`w-full flex items-center gap-4 px-5 py-4 border-b border-gray-100 text-left transition-colors active:opacity-70
+                      ${lesson ? 'bg-teal-50' : sel ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                    <span className="text-sm font-medium text-gray-500 w-14 flex-shrink-0">{slot}</span>
+                    <div className={`flex-1 h-2.5 rounded-full ${lesson ? 'bg-teal-400' : sel ? 'bg-blue-400' : 'bg-gray-100'}`} />
+                    {lesson && <span className="text-xs font-semibold text-teal-600 flex-shrink-0">申込済 ✕</span>}
+                    {!lesson && sel && <span className="text-xs font-semibold text-blue-600 flex-shrink-0">選択中</span>}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
 
         {msg && (
           <div className={`rounded-xl px-4 py-3 text-sm font-bold flex items-center justify-between gap-3
