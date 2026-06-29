@@ -162,7 +162,7 @@ export default function AbsencePage() {
         </div>
 
         {/* 日時追加カード（積み重なり型） */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
           {/* 追加済みアイテム */}
           {items.map((item, i) => (
             <div key={i} className="flex items-center gap-3 px-5 py-4 border-b border-orange-100 bg-orange-50">
