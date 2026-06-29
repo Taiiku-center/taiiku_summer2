@@ -5,11 +5,22 @@ import { createClient } from '../../lib/supabase'
 import { getSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_START, PERIOD_END, type Lesson, type Student } from '../../lib'
 
 const DAYS_JP = ['月', '火', '水', '木', '金', '土', '日']
+const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
 
 function getMondayOf(d: Date) {
   const dow = d.getDay()
   const diff = dow === 0 ? -6 : 1 - dow
   const m = new Date(d); m.setDate(d.getDate() + diff); m.setHours(0,0,0,0); return m
+}
+
+async function sendEmail(subject: string, body: string) {
+  try {
+    await fetch(`https://formsubmit.co/ajax/${NOTIFY_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ _subject: subject, message: body, _captcha: 'false' }),
+    })
+  } catch {}
 }
 
 type View = 'month' | 'week' | 'day'
@@ -92,6 +103,7 @@ export default function SchedulePage() {
         type: 'lesson', title: '新しい授業申込みがありました',
         message: `${student.full_name}（${count}コマ）`, is_read: false,
       })
+      sendEmail('【夏期講習】新しい授業申込み', `${student.full_name} さんが ${count}コマの授業を申し込みました。管理画面でご確認ください。`)
     }
     setSaving(false)
     if (error) {
@@ -225,48 +237,60 @@ export default function SchedulePage() {
     }
 
     return (
-      <div
-        onContextMenu={e => e.preventDefault()}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-        className="bg-white rounded-2xl shadow-sm overflow-x-auto select-none"
-        style={{ touchAction: selectMode ? 'none' : 'pan-x pan-y', WebkitUserSelect: 'none', userSelect: 'none' }}>
-        <div className="min-w-[360px]" style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
-          <div className="border-b border-r border-gray-200" />
-          {wd.slice(0, 6).map((d, i) => {
-            const inP = isInPeriod(d)
-            return (
-              <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
-                {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
-              </div>
-            )
-          })}
-          {TIME_SLOTS.map(slot => (
-            <div key={slot} className="contents">
-              <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap">{slot}</div>
-              {wd.slice(0, 6).map((d, di) => {
-                const lesson = existingAt(d, slot)
-                const sel = selected.has(key(d, slot))
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden select-none">
+        <div
+          className="overflow-x-auto"
+          onContextMenu={e => e.preventDefault()}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}>
+          <div
+            className="min-w-[360px] overflow-y-auto"
+            style={{
+              maxHeight: '65vh',
+              touchAction: selectMode ? 'none' : 'pan-x pan-y',
+              WebkitUserSelect: 'none', userSelect: 'none',
+            }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
+              <div className="border-b border-r border-gray-200 bg-white sticky top-0 left-0 z-20" />
+              {wd.slice(0, 6).map((d, i) => {
                 const inP = isInPeriod(d)
-                const blocked = isBlocked(d, slot)
                 return (
-                  <div key={di}
-                    data-ds={toDateStr(d)} data-slot={slot}
-                    onPointerDown={e => onPointerDown(e, d, slot)}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                    onClick={() => handleClick(d, slot)}
-                    className={`border-b border-r border-gray-200 h-10 transition-colors
-                      ${!inP || blocked ? 'bg-gray-50 cursor-not-allowed' :
-                        lesson ? 'bg-teal-400 active:bg-teal-300 cursor-pointer' :
-                        sel ? 'bg-blue-400 cursor-pointer' :
-                        'hover:bg-blue-50 active:bg-blue-100 cursor-pointer'}`}
-                    style={blocked ? { backgroundImage: 'repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 1px, transparent 1px, transparent 6px)' } : undefined}
-                  />
+                  <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
+                    ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
+                    {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
+                  </div>
                 )
               })}
+              {TIME_SLOTS.map(slot => (
+                <div key={slot} className="contents">
+                  <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
+                    {slot}
+                  </div>
+                  {wd.slice(0, 6).map((d, di) => {
+                    const lesson = existingAt(d, slot)
+                    const sel = selected.has(key(d, slot))
+                    const inP = isInPeriod(d)
+                    const blocked = isBlocked(d, slot)
+                    return (
+                      <div key={di}
+                        data-ds={toDateStr(d)} data-slot={slot}
+                        onPointerDown={e => onPointerDown(e, d, slot)}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={onPointerUp}
+                        onClick={() => handleClick(d, slot)}
+                        className={`border-b border-r border-gray-200 h-10 transition-colors
+                          ${!inP || blocked ? 'bg-gray-50 cursor-not-allowed' :
+                            lesson ? 'bg-teal-400 active:bg-teal-300 cursor-pointer' :
+                            sel ? 'bg-blue-400 cursor-pointer' :
+                            'hover:bg-blue-50 active:bg-blue-100 cursor-pointer'}`}
+                        style={blocked ? { backgroundImage: 'repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 1px, transparent 1px, transparent 6px)' } : undefined}
+                      />
+                    )
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     )
@@ -357,14 +381,14 @@ export default function SchedulePage() {
           {view === 'week' && (
             <button
               onClick={() => setSelectMode(v => !v)}
-              className={`md:hidden ml-auto text-sm font-bold px-4 py-2 rounded-xl transition-colors
+              className={`ml-auto text-sm font-bold px-4 py-2 rounded-xl transition-colors
                 ${selectMode ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 border-2 border-blue-200'}`}>
               {selectMode ? '完了' : '複数選択'}
             </button>
           )}
         </div>
         {selectMode && view === 'week' && (
-          <div className="md:hidden bg-blue-600 px-4 py-2 text-xs text-white text-center font-medium">
+          <div className="bg-blue-600 px-4 py-2 text-xs text-white text-center font-medium">
             指をドラッグして複数コマを選べます
           </div>
         )}

@@ -4,6 +4,17 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { getSession, TIME_SLOTS, isSlotAvailable, toDateStr, PERIOD_START, PERIOD_END, type Student } from '../../lib'
 
+const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
+async function sendEmail(subject: string, body: string) {
+  try {
+    await fetch(`https://formsubmit.co/ajax/${NOTIFY_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ _subject: subject, message: body, _captcha: 'false' }),
+    })
+  } catch {}
+}
+
 export default function AbsencePage() {
   const router = useRouter()
   const [student, setStudent]       = useState<Student | null>(null)
@@ -49,6 +60,9 @@ export default function AbsencePage() {
         message: `${student.full_name}（${date} ${time}〜）`, is_read: false,
       })
     }
+    const emailSubject = type === '欠席' ? '【夏期講習】欠席連絡' : '【夏期講習】遅刻連絡'
+    const makeupText = makeUp === '希望する' ? '\n振替：希望する' : ''
+    sendEmail(emailSubject, `${student.full_name} さんから${type}の連絡がありました。\n日付：${date}\n時間：${time}〜${makeupText}\n管理画面でご確認ください。`)
     setDone(true); setSubmitting(false); setNote('')
   }
 

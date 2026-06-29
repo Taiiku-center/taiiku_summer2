@@ -4,6 +4,17 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { getSession, type Student } from '../../lib'
 
+const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
+async function sendEmail(subject: string, body: string) {
+  try {
+    await fetch(`https://formsubmit.co/ajax/${NOTIFY_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ _subject: subject, message: body, _captcha: 'false' }),
+    })
+  } catch {}
+}
+
 const SCREENS = ['ログイン画面', 'ホーム画面', '授業申込み画面', '欠席・遅刻連絡画面', '授業確認カレンダー', 'その他']
 
 export default function BugReportPage() {
@@ -32,6 +43,7 @@ export default function BugReportPage() {
       type: 'bug', title: '不具合報告が届きました',
       message: `${student.full_name}（${screenName}）`, is_read: false,
     })
+    sendEmail('【夏期講習】不具合報告', `${student.full_name} さんから不具合報告がありました。\n画面：${screenName}\n内容：${description.trim()}\n管理画面でご確認ください。`)
     setDone(true); setSubmitting(false)
   }
 
