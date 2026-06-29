@@ -395,13 +395,6 @@ export default function SchedulePage() {
           </div>
         )}
 
-        {view === 'week' && (
-          <div className="bg-blue-50 rounded-xl px-4 py-3 text-xs text-blue-700 space-y-1">
-            <div><span className="font-bold">月・水・土</span>：13:00〜21:00</div>
-            <div><span className="font-bold">火・木</span>：19:00〜21:00　<span className="font-bold">金</span>：18:00〜21:00</div>
-          </div>
-        )}
-
         {view === 'week' && <WeekGrid />}
         {view === 'month' && <MonthGrid />}
         {view === 'day' && <DayList />}
