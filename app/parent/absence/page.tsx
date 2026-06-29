@@ -55,12 +55,31 @@ export default function AbsencePage() {
   if (!student) return null
 
   if (done) {
+    const d = new Date(date + 'T00:00:00')
+    const dateLabel = d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm text-center space-y-4">
           <div className="text-5xl">✅</div>
           <h2 className="text-xl font-bold text-gray-800">連絡が送信されました</h2>
-          <p className="text-sm text-gray-500">塾に{type}の連絡が届きました</p>
+          <div className="bg-orange-50 rounded-2xl p-4 text-left space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">種別</span>
+              <span className="font-bold text-orange-700">{type}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">日付</span>
+              <span className="font-semibold text-gray-700">{dateLabel}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">時間</span>
+              <span className="font-semibold text-gray-700">{time}〜</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">振替</span>
+              <span className="font-semibold text-gray-700">{makeUp}</span>
+            </div>
+          </div>
           <button onClick={() => router.push('/parent')}
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">
             ホームに戻る

@@ -23,7 +23,9 @@ export default function SchedulePage() {
   const [current, setCurrent] = useState(new Date())
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [msgIsError, setMsgIsError] = useState(false)
   const [cancelModal, setCancelModal] = useState<Lesson | null>(null)
+  const [cancelConfirm, setCancelConfirm] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
 
   const dragActive        = useRef(false)
@@ -67,9 +69,11 @@ export default function SchedulePage() {
     const supabase = createClient()
     setExisting(prev => prev.filter(l => l.id !== id))
     setCancelModal(null)
+    setCancelConfirm(false)
     await supabase.from('summer_lessons2').delete().eq('id', id)
-    setMsg('キャンセルしました。新しい日時を選んで申込めます')
-    setTimeout(() => setMsg(''), 4000)
+    setMsg('キャンセルしました。新しい日時を選んで申込みできます')
+    setMsgIsError(true)
+    setTimeout(() => setMsg(''), 5000)
   }
 
   async function handleSubmit() {
@@ -81,17 +85,24 @@ export default function SchedulePage() {
       const ds = k.slice(0, sep), slot = k.slice(sep + 2)
       return { student_id: student.id, full_name: student.full_name, date: ds, start_time: slot, end_time: endTime(slot), status: 'pending' }
     })
+    const count = rows.length
     const { error } = await supabase.from('summer_lessons2').insert(rows)
     if (!error) {
       await supabase.from('summer_notifications').insert({
         type: 'lesson', title: '新しい授業申込みがありました',
-        message: `${student.full_name}（${rows.length}コマ）`, is_read: false,
+        message: `${student.full_name}（${count}コマ）`, is_read: false,
       })
     }
     setSaving(false)
-    setMsg(error ? '申込みに失敗しました。再度お試しください。' : '申込みました')
+    if (error) {
+      setMsg('申込みに失敗しました。再度お試しください。')
+      setMsgIsError(true)
+      setTimeout(() => setMsg(''), 5000)
+    } else {
+      setMsg(`✅ ${count}コマの申込みが完了しました`)
+      setMsgIsError(false)
+    }
     await fetchExisting()
-    setTimeout(() => setMsg(''), 4000)
   }
 
   function key(dateObj: Date, slot: string) { return `${toDateStr(dateObj)}__${slot}` }
@@ -109,7 +120,28 @@ export default function SchedulePage() {
     setSelected(prev => { const n = new Set(prev); paintV.current ? n.add(k) : n.delete(k); return n })
   }
 
+  function canGoPrev() {
+    if (view === 'month') return !(current.getFullYear() === 2026 && current.getMonth() === 6)
+    if (view === 'week') {
+      const mon = getMondayOf(current)
+      const prevSun = new Date(mon); prevSun.setDate(mon.getDate() - 1)
+      return toDateStr(prevSun) >= PERIOD_START
+    }
+    return toDateStr(current) > PERIOD_START
+  }
+
+  function canGoNext() {
+    if (view === 'month') return !(current.getFullYear() === 2026 && current.getMonth() === 7)
+    if (view === 'week') {
+      const mon = getMondayOf(current)
+      const nextMon = new Date(mon); nextMon.setDate(mon.getDate() + 7)
+      return toDateStr(nextMon) <= PERIOD_END
+    }
+    return toDateStr(current) < PERIOD_END
+  }
+
   function navigatePrev() {
+    if (!canGoPrev()) return
     setCurrent(d => {
       const n = new Date(d)
       if (view === 'month') n.setMonth(n.getMonth() - 1)
@@ -118,7 +150,9 @@ export default function SchedulePage() {
       return n
     })
   }
+
   function navigateNext() {
+    if (!canGoNext()) return
     setCurrent(d => {
       const n = new Date(d)
       if (view === 'month') n.setMonth(n.getMonth() + 1)
@@ -185,10 +219,7 @@ export default function SchedulePage() {
     function onPointerUp() { dragActive.current = false }
 
     function handleClick(d: Date, slot: string) {
-      if (suppressNextClick.current) {
-        suppressNextClick.current = false
-        return
-      }
+      if (suppressNextClick.current) { suppressNextClick.current = false; return }
       if (!isInPeriod(d) || isBlocked(d, slot)) return
       toggleCell(d, slot)
     }
@@ -199,27 +230,20 @@ export default function SchedulePage() {
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
         className="bg-white rounded-2xl shadow-sm overflow-x-auto select-none"
-        style={{
-          touchAction: selectMode ? 'none' : 'pan-x pan-y',
-          WebkitUserSelect: 'none', userSelect: 'none',
-        }}>
+        style={{ touchAction: selectMode ? 'none' : 'pan-x pan-y', WebkitUserSelect: 'none', userSelect: 'none' }}>
         <div className="min-w-[360px]" style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
           <div className="border-b border-r border-gray-200" />
           {wd.slice(0, 6).map((d, i) => {
             const inP = isInPeriod(d)
             return (
-              <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight
-                ${i===5?'text-blue-500':'text-gray-600'}
-                ${!inP ? 'opacity-30' : ''}`}>
+              <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
                 {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
               </div>
             )
           })}
           {TIME_SLOTS.map(slot => (
             <div key={slot} className="contents">
-              <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap">
-                {slot}
-              </div>
+              <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap">{slot}</div>
               {wd.slice(0, 6).map((d, di) => {
                 const lesson = existingAt(d, slot)
                 const sel = selected.has(key(d, slot))
@@ -277,17 +301,16 @@ export default function SchedulePage() {
               <button key={i} disabled={!inP} onClick={() => { if (inP) { setCurrent(d); setView('week') } }}
                 className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors
                   ${!inP ? 'text-gray-200' : isToday ? 'bg-blue-600 text-white' :
-                    dow===6 ? 'text-blue-500 hover:bg-blue-50' :
-                    'text-gray-700 hover:bg-gray-100'}`}>
+                    dow===6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100'}`}>
                 {d.getDate()}
                 {has && inP && <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-teal-500'}`} />}
               </button>
             )
           })}
         </div>
-        {submittedDates.size > 0 && (
-          <p className="text-xs text-gray-400 mt-3 text-center">● = 申込み済みの日　タップで週ビューに移動</p>
-        )}
+        <p className="text-xs text-gray-400 mt-3 text-center">
+          日付をタップすると週ビューに切り替わります{submittedDates.size > 0 ? '（● = 申込済）' : ''}
+        </p>
       </div>
     )
   }
@@ -358,9 +381,11 @@ export default function SchedulePage() {
               </button>
             ))}
           </div>
-          <button onClick={navigatePrev} className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200">←</button>
+          <button onClick={navigatePrev} disabled={!canGoPrev()}
+            className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200 disabled:opacity-30">←</button>
           <div className="flex-1 text-center font-bold text-gray-800 text-sm">{displayTitle()}</div>
-          <button onClick={navigateNext} className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200">→</button>
+          <button onClick={navigateNext} disabled={!canGoNext()}
+            className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200 disabled:opacity-30">→</button>
         </div>
 
         {view !== 'month' && (
@@ -382,15 +407,24 @@ export default function SchedulePage() {
         {view === 'day' && <DayList />}
 
         {msg && (
-          <div className={`text-center font-bold py-2 rounded-xl ${msg.includes('失敗') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-            {msg}
+          <div className={`rounded-xl px-4 py-3 text-sm font-bold flex items-center justify-between gap-3
+            ${msgIsError ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+            <span>{msg}</span>
+            {!msgIsError && (
+              <button onClick={() => router.push('/parent/calendar')}
+                className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg whitespace-nowrap flex-shrink-0">
+                カレンダーで確認 →
+              </button>
+            )}
           </div>
         )}
 
         {view !== 'month' && (
           <button onClick={handleSubmit} disabled={saving || selected.size === 0}
             className="w-full bg-blue-600 text-white py-4 rounded-2xl text-base font-medium active:bg-blue-700 disabled:opacity-50">
-            {saving ? '送信中...' : `この内容で申込む（${selected.size}コマ）`}
+            {saving ? '送信中...' : view === 'day'
+              ? `${displayTitle()}の内容で申込む（${selected.size}コマ）`
+              : `この内容で申込む（${selected.size}コマ）`}
           </button>
         )}
       </main>
@@ -406,17 +440,38 @@ export default function SchedulePage() {
                   <div className="text-sm font-semibold text-teal-700">{dateStr}</div>
                   <div className="text-lg font-bold text-teal-800">{timeStr}</div>
                 </div>
-                <p className="text-sm text-gray-500">変更する場合は、この申込みをキャンセルしてから新しい日時を選んでください。</p>
-                <div className="space-y-2">
-                  <button onClick={() => cancelLesson(cancelModal.id)}
-                    className="w-full bg-red-500 text-white py-3 rounded-xl text-sm font-bold active:bg-red-600">
-                    この申込みをキャンセルして変更する
-                  </button>
-                  <button onClick={() => setCancelModal(null)}
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
-                    このままにする
-                  </button>
-                </div>
+                {!cancelConfirm ? (
+                  <>
+                    <p className="text-sm text-gray-500">変更する場合は、この申込みをキャンセルしてから新しい日時を選んでください。</p>
+                    <div className="space-y-2">
+                      <button onClick={() => setCancelConfirm(true)}
+                        className="w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl text-sm font-bold active:bg-red-100">
+                        キャンセルして変更する
+                      </button>
+                      <button onClick={() => { setCancelModal(null); setCancelConfirm(false) }}
+                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        このままにする
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700 font-medium text-center">
+                      本当にキャンセルしますか？<br/>
+                      <span className="text-xs font-normal text-red-500">この操作は取り消せません</span>
+                    </div>
+                    <div className="space-y-2">
+                      <button onClick={() => cancelLesson(cancelModal.id)}
+                        className="w-full bg-red-500 text-white py-3 rounded-xl text-sm font-bold active:bg-red-600">
+                        はい、キャンセルします
+                      </button>
+                      <button onClick={() => setCancelConfirm(false)}
+                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        やめる
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

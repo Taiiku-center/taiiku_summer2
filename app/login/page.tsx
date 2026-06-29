@@ -29,7 +29,7 @@ export default function LoginPage() {
         .eq('full_name', fullName)
         .single()
       if (dbErr || !data) {
-        setError('IDまたはお名前が正しくありません')
+        setError('4桁のIDかお名前が違います。ご確認いただくか、塾にお問い合わせください')
         setLoading(false)
         return
       }
