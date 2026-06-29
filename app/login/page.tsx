@@ -73,7 +73,7 @@ export default function LoginPage() {
                   type="text"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
-                  placeholder="山田"
+                  placeholder="大育"
                   className="w-full text-2xl text-center border-2 border-gray-200 rounded-2xl py-4 px-2 focus:outline-none focus:border-blue-400 transition-colors"
                 />
               </div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           </button>
         </div>
       </div>
-      <p className="text-xs text-blue-300 mt-6">IDやお名前が分からない場合は塾にお問い合わせください</p>
+      <p className="text-xs text-blue-300 mt-6">IDが分からない場合は塾にお問い合わせください</p>
     </div>
   )
 }
