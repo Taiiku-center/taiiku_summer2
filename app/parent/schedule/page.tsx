@@ -37,7 +37,6 @@ export default function SchedulePage() {
   const [msgIsError, setMsgIsError] = useState(false)
   const [cancelModal, setCancelModal] = useState<Lesson | null>(null)
   const [cancelConfirm, setCancelConfirm] = useState(false)
-  const [selectMode, setSelectMode] = useState(false)
 
   const dragActive        = useRef(false)
   const paintV            = useRef(true)
@@ -182,10 +181,7 @@ export default function SchedulePage() {
   }
 
   function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
-
-  function isBlocked(d: Date, slot: string) {
-    return !isSlotAvailable(d.getDay(), slot)
-  }
+  function isBlocked(d: Date, slot: string) { return !isSlotAvailable(d.getDay(), slot) }
 
   function displayTitle() {
     const wd = weekDates()
@@ -200,25 +196,16 @@ export default function SchedulePage() {
   const WeekGrid = () => {
     const wd = weekDates()
 
+    // PCのみ: マウスドラッグで複数選択
     function onPointerDown(e: React.PointerEvent, d: Date, slot: string) {
+      if (e.pointerType !== 'mouse') return
       if (!isInPeriod(d) || isBlocked(d, slot)) return
-      const isMouse = e.pointerType === 'mouse'
-      const isTouch = !isMouse
-
-      if (isMouse) {
-        suppressNextClick.current = true
-        const lesson = existingAt(d, slot)
-        if (lesson) { setCancelModal(lesson); return }
-        paintV.current = !selected.has(key(d, slot))
-        dragActive.current = true
-        paintCell(d, slot)
-      } else if (isTouch && selectMode) {
-        const lesson = existingAt(d, slot)
-        if (lesson) return
-        paintV.current = !selected.has(key(d, slot))
-        dragActive.current = true
-        paintCell(d, slot)
-      }
+      suppressNextClick.current = true
+      const lesson = existingAt(d, slot)
+      if (lesson) { setCancelModal(lesson); return }
+      paintV.current = !selected.has(key(d, slot))
+      dragActive.current = true
+      paintCell(d, slot)
     }
 
     function onPointerMove(e: React.PointerEvent) {
@@ -232,6 +219,7 @@ export default function SchedulePage() {
 
     function onPointerUp() { dragActive.current = false }
 
+    // タッチ・PC共通: タップ／クリックで1コマ選択
     function handleClick(d: Date, slot: string) {
       if (suppressNextClick.current) { suppressNextClick.current = false; return }
       if (!isInPeriod(d) || isBlocked(d, slot)) return
@@ -247,11 +235,7 @@ export default function SchedulePage() {
           onPointerLeave={onPointerUp}>
           <div
             className="min-w-[360px] overflow-y-auto"
-            style={{
-              maxHeight: '65vh',
-              touchAction: selectMode ? 'none' : 'pan-x pan-y',
-              WebkitUserSelect: 'none', userSelect: 'none',
-            }}>
+            style={{ maxHeight: '65vh', WebkitUserSelect: 'none', userSelect: 'none' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
               <div className="border-b border-r border-gray-200 bg-white sticky top-0 left-0 z-20" />
               {wd.slice(0, 6).map((d, i) => {
@@ -380,20 +364,7 @@ export default function SchedulePage() {
         <div className="px-4 py-3 flex items-center gap-3">
           <button onClick={() => router.back()} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold active:bg-gray-200">← 戻る</button>
           <h1 className="text-base font-bold text-gray-800">授業を申し込む</h1>
-          {view === 'week' && (
-            <button
-              onClick={() => setSelectMode(v => !v)}
-              className={`ml-auto text-sm font-bold px-4 py-2 rounded-xl transition-colors
-                ${selectMode ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 border-2 border-blue-200'}`}>
-              {selectMode ? '完了' : '複数選択'}
-            </button>
-          )}
         </div>
-        {selectMode && view === 'week' && (
-          <div className="bg-blue-600 px-4 py-2 text-xs text-white text-center font-medium">
-            指をドラッグして複数コマを選べます
-          </div>
-        )}
       </header>
 
       <main className="max-w-4xl mx-auto px-3 py-4 space-y-4">
@@ -418,6 +389,7 @@ export default function SchedulePage() {
           <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
             <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
             <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />申込済（タップで変更・キャンセル）</div>
+            <div className="text-gray-400">コマをタップして選択できます</div>
           </div>
         )}
 
