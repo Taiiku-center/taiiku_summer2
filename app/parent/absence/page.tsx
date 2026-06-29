@@ -25,7 +25,7 @@ export default function AbsencePage() {
 
   async function handleSubmit() {
     if (!student || !date || !time) { setError('すべての項目を入力してください'); return }
-    if (date < PERIOD_START || date > PERIOD_END) { setError('申込み期間外の日付です'); return }
+    if (date < PERIOD_START || date > PERIOD_END) { setError('夏期講習の期間外の日付です'); return }
     setSubmitting(true)
     setError('')
     const supabase = createClient()

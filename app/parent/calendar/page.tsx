@@ -48,15 +48,11 @@ export default function CalendarPage() {
     const month = viewMonth.getMonth()
     const first = new Date(year, month, 1)
     const last  = new Date(year, month + 1, 0)
-    const firstDow = first.getDay() === 0 ? 0 : first.getDay() - 1
-    const allDays: Date[] = []
-    for (let d = 1; d <= last.getDate(); d++) {
-      const date = new Date(year, month, d)
-      if (date.getDay() !== 0) allDays.push(date)
-    }
-    const cells: (Date | null)[] = [...Array(firstDow).fill(null), ...allDays]
-    while (cells.length % 6 !== 0) cells.push(null)
-    return cells
+    const startDow = (first.getDay() + 6) % 7
+    const days: (Date | null)[] = Array(startDow).fill(null)
+    for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d))
+    while (days.length % 7 !== 0) days.push(null)
+    return days
   }
 
   function lessonsOn(ds: string) { return lessons.filter(l => l.date === ds) }
@@ -105,12 +101,12 @@ export default function CalendarPage() {
               <button onClick={() => setViewMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
                 className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all">›</button>
             </div>
-            <div className="grid grid-cols-6 mb-2">
-              {['月','火','水','木','金','土'].map((d, i) => (
-                <div key={d} className={`text-center text-sm font-bold py-2 ${i===5?'text-blue-500':'text-gray-400'}`}>{d}</div>
+            <div className="grid grid-cols-7 mb-2">
+              {['月','火','水','木','金','土','日'].map((d, i) => (
+                <div key={d} className={`text-center text-sm font-bold py-2 ${i===6?'text-red-500':i===5?'text-blue-500':'text-gray-400'}`}>{d}</div>
               ))}
             </div>
-            <div className="grid grid-cols-6 gap-1">
+            <div className="grid grid-cols-7 gap-1">
               {days.map((d, i) => {
                 if (!d) return <div key={i} />
                 const ds = toDateStr(d)
@@ -125,7 +121,7 @@ export default function CalendarPage() {
                     onClick={() => setSelectedDate(isSel ? null : ds)}
                     className={`relative flex flex-col items-center justify-center py-3 rounded-xl text-sm font-medium transition-all active:scale-95
                       ${!inP ? 'text-gray-200' : ''}
-                      ${inP && !isSel && !isToday ? (dow===6?'text-blue-500 hover:bg-blue-50':'text-gray-700 hover:bg-gray-100') : ''}
+                      ${inP && !isSel && !isToday ? (dow===0?'text-red-500 hover:bg-red-50':dow===6?'text-blue-500 hover:bg-blue-50':'text-gray-700 hover:bg-gray-100') : ''}
                       ${isToday && !isSel ? 'bg-blue-50 text-blue-600' : ''}
                       ${isSel ? 'bg-blue-600 text-white shadow-md' : ''}`}>
                     <span className="text-base font-bold">{d.getDate()}</span>

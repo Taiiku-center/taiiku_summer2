@@ -135,7 +135,6 @@ export default function SchedulePage() {
 
   function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
 
-  // 曜日ごとの受講可能時間外セルはブロック
   function isBlocked(d: Date, slot: string) {
     return !isSlotAvailable(d.getDay(), slot)
   }
@@ -156,6 +155,7 @@ export default function SchedulePage() {
     function onPointerDown(e: React.PointerEvent, d: Date, slot: string) {
       if (!isInPeriod(d) || isBlocked(d, slot)) return
       const isMouse = e.pointerType === 'mouse'
+      const isTouch = !isMouse
 
       if (isMouse) {
         suppressNextClick.current = true
@@ -164,8 +164,9 @@ export default function SchedulePage() {
         paintV.current = !selected.has(key(d, slot))
         dragActive.current = true
         paintCell(d, slot)
-      } else if (selectMode) {
-        if (existingAt(d, slot)) return
+      } else if (isTouch && selectMode) {
+        const lesson = existingAt(d, slot)
+        if (lesson) return
         paintV.current = !selected.has(key(d, slot))
         dragActive.current = true
         paintCell(d, slot)
@@ -178,14 +179,16 @@ export default function SchedulePage() {
       const ds2 = el?.dataset.ds, slot2 = el?.dataset.slot
       if (!ds2 || !slot2) return
       const [y, mo, d2] = ds2.split('-').map(Number)
-      const dateObj = new Date(y, mo - 1, d2)
-      if (!isBlocked(dateObj, slot2)) paintCell(dateObj, slot2)
+      paintCell(new Date(y, mo - 1, d2), slot2)
     }
 
     function onPointerUp() { dragActive.current = false }
 
     function handleClick(d: Date, slot: string) {
-      if (suppressNextClick.current) { suppressNextClick.current = false; return }
+      if (suppressNextClick.current) {
+        suppressNextClick.current = false
+        return
+      }
       if (!isInPeriod(d) || isBlocked(d, slot)) return
       toggleCell(d, slot)
     }
@@ -367,7 +370,6 @@ export default function SchedulePage() {
           </div>
         )}
 
-        {/* 曜日ごとの時間案内 */}
         {view === 'week' && (
           <div className="bg-blue-50 rounded-xl px-4 py-3 text-xs text-blue-700 space-y-1">
             <div><span className="font-bold">月・水・土</span>：13:00〜21:00</div>
