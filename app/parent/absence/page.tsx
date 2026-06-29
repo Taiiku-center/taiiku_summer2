@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
-import { getSession, TIME_SLOTS, toDateStr, PERIOD_START, PERIOD_END, type Student } from '../../lib'
+import { getSession, TIME_SLOTS, isSlotAvailable, toDateStr, PERIOD_START, PERIOD_END, type Student } from '../../lib'
 
 export default function AbsencePage() {
   const router = useRouter()
   const [student, setStudent]       = useState<Student | null>(null)
   const [date, setDate]             = useState('')
-  const [time, setTime]             = useState(TIME_SLOTS[0])
+  const [time, setTime]             = useState('')
   const [type, setType]             = useState<'欠席' | '遅刻'>('欠席')
   const [makeUp, setMakeUp]         = useState<'希望する' | '希望しない' | '未定'>('未定')
   const [note, setNote]             = useState('')
@@ -20,7 +20,11 @@ export default function AbsencePage() {
     const s = getSession()
     if (!s) { router.replace('/login'); return }
     setStudent(s)
-    setDate(toDateStr(new Date()))
+    const today = toDateStr(new Date())
+    setDate(today)
+    const dow = new Date().getDay()
+    const firstSlot = TIME_SLOTS.find(s => isSlotAvailable(dow, s))
+    setTime(firstSlot || TIME_SLOTS[0])
   }, [router])
 
   async function handleSubmit() {
@@ -92,7 +96,12 @@ export default function AbsencePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-2">対象の日付</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              <input type="date" value={date} onChange={e => {
+                  setDate(e.target.value)
+                  const dow = new Date(e.target.value + 'T00:00:00').getDay()
+                  const firstSlot = TIME_SLOTS.find(s => isSlotAvailable(dow, s))
+                  setTime(firstSlot || '')
+                }}
                 min={PERIOD_START} max={PERIOD_END}
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-blue-400 transition-colors" />
             </div>
@@ -100,7 +109,7 @@ export default function AbsencePage() {
               <label className="block text-sm font-semibold text-gray-600 mb-2">対象の時間</label>
               <select value={time} onChange={e => setTime(e.target.value)}
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-blue-400 bg-white transition-colors">
-                {TIME_SLOTS.map(s => <option key={s} value={s}>{s}〜</option>)}
+                {TIME_SLOTS.filter(s => isSlotAvailable(new Date(date + 'T00:00:00').getDay(), s)).map(s => <option key={s} value={s}>{s}〜</option>)}
               </select>
             </div>
           </div>
