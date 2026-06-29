@@ -165,7 +165,13 @@ export default function AbsencePage() {
 
         {/* 日時追加 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-600">対象の日時を追加</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-600">対象の日時を追加</h2>
+            <button onClick={addItem} disabled={!date || slots.length === 0}
+              className="bg-orange-500 text-white text-sm font-bold px-4 py-1.5 rounded-xl active:bg-orange-600 disabled:opacity-40 transition-colors">
+              ＋ 追加
+            </button>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">日付</label>
@@ -187,10 +193,6 @@ export default function AbsencePage() {
               )}
             </div>
           </div>
-          <button onClick={addItem} disabled={!date || slots.length === 0}
-            className="w-full border-2 border-dashed border-orange-300 text-orange-500 font-bold py-3 rounded-xl active:bg-orange-50 disabled:opacity-40 transition-colors">
-            + この日時を追加
-          </button>
         </div>
 
         {/* 追加済みリスト */}

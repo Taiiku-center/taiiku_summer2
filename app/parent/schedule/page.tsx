@@ -45,6 +45,16 @@ export default function SchedulePage() {
   // Touch long press & drag
   const longPressTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressTouchClick = useRef(false)
+  const gridScrollRef      = useRef<HTMLDivElement>(null)
+
+  // 長押しドラッグ中は縦横問わずスクロールを止めてセル選択を優先
+  useEffect(() => {
+    const el = gridScrollRef.current
+    if (!el) return
+    const onTouchMove = (e: TouchEvent) => { if (dragActive.current) e.preventDefault() }
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove)
+  }, [])
 
   useEffect(() => {
     const s = getSession()
@@ -160,7 +170,7 @@ export default function SchedulePage() {
         paintV.current = !selected.has(key(d, slot))
         dragActive.current = true
         paintCell(d, slot)
-      }, 1500)
+      }, 1200)
     }
   }
 
@@ -296,6 +306,7 @@ export default function SchedulePage() {
               onPointerUp={onCellPointerUp}
               onPointerLeave={onCellPointerUp}>
               <div
+                ref={gridScrollRef}
                 className="min-w-[360px] overflow-y-auto"
                 style={{ maxHeight: '65vh', WebkitUserSelect: 'none', userSelect: 'none' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
