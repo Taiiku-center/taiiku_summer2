@@ -17,9 +17,10 @@ export default function ParentHomePage() {
 
   const menus = [
     { label: '授業を申し込む',       sub: '希望の日時を選んで申込み',   emoji: '📅', href: '/parent/schedule',   bg: 'bg-blue-500',   shadow: 'shadow-blue-100' },
-    { label: '欠席・遅刻を連絡する', sub: '欠席・遅刻・振替希望の連絡', emoji: '📢', href: '/parent/absence',    bg: 'bg-orange-500', shadow: 'shadow-orange-100' },
-    { label: '授業予定を確認する',   sub: '申込み済みの授業カレンダー', emoji: '📋', href: '/parent/calendar',   bg: 'bg-green-500',  shadow: 'shadow-green-100' },
-    { label: '不具合を報告する',     sub: 'アプリの不具合・お困りの際', emoji: '🔧', href: '/parent/bug-report', bg: 'bg-gray-500',   shadow: 'shadow-gray-100' },
+    { label: '欠席・遅刻を連絡する', sub: '欠席・遅刻・振替希望の連絡', emoji: '📢', href: '/parent/absence',         bg: 'bg-orange-500', shadow: 'shadow-orange-100' },
+    { label: '欠席・遅刻の履歴',     sub: '連絡履歴の確認・キャンセル', emoji: '📝', href: '/parent/absence/history', bg: 'bg-amber-400',  shadow: 'shadow-amber-100' },
+    { label: '授業予定を確認する',   sub: '申込み済みの授業カレンダー', emoji: '📋', href: '/parent/calendar',        bg: 'bg-green-500',  shadow: 'shadow-green-100' },
+    { label: '不具合を報告する',     sub: 'アプリの不具合・お困りの際', emoji: '🔧', href: '/parent/bug-report',      bg: 'bg-gray-500',   shadow: 'shadow-gray-100' },
   ]
 
   return (
