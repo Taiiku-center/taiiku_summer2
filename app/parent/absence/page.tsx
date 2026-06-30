@@ -34,6 +34,8 @@ export default function AbsencePage() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone]             = useState(false)
   const [doneItems, setDoneItems]   = useState<Item[]>([])
+  const [doneIds, setDoneIds]       = useState<string[]>([])
+  const [cancelling, setCancelling] = useState(false)
   const [error, setError]           = useState('')
 
   useEffect(() => {
@@ -78,11 +80,13 @@ export default function AbsencePage() {
     setSubmitting(true)
     setError('')
     const supabase = createClient()
+    const insertedIds: string[] = []
     for (const item of targets) {
-      await supabase.from('summer_absences').insert({
+      const { data: inserted } = await supabase.from('summer_absences').insert({
         student_id: student.id, full_name: student.full_name,
         date: item.date, time: item.time, type, make_up_request: type === 'キャンセル' ? '未定' : makeUp, note,
-      })
+      }).select('id').single()
+      if (inserted) insertedIds.push(inserted.id)
       const notifType = type === '欠席' ? 'absence' : type === '遅刻' ? 'late' : 'cancel'
       const notifTitle = type === '欠席' ? '欠席連絡がありました' : type === '遅刻' ? '遅刻連絡がありました' : '連絡キャンセルがありました'
       await supabase.from('summer_notifications').insert({
@@ -102,8 +106,18 @@ export default function AbsencePage() {
       )
     }
     setDoneItems(targets)
+    setDoneIds(insertedIds)
     setDone(true)
     setSubmitting(false)
+  }
+
+  async function handleCancelSubmission() {
+    if (doneIds.length === 0) return
+    setCancelling(true)
+    const supabase = createClient()
+    await supabase.from('summer_absences').delete().in('id', doneIds)
+    setCancelling(false)
+    router.push('/parent')
   }
 
   if (!student) return null
@@ -135,6 +149,10 @@ export default function AbsencePage() {
           <button onClick={() => router.push('/parent')}
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">
             ホームに戻る
+          </button>
+          <button onClick={handleCancelSubmission} disabled={cancelling}
+            className="w-full border-2 border-red-200 text-red-500 font-bold py-3 rounded-2xl text-sm disabled:opacity-40 active:bg-red-50">
+            {cancelling ? '取り消し中...' : '送信を取り消す'}
           </button>
         </div>
       </div>
