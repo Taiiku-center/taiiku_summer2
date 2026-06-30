@@ -165,10 +165,14 @@ export default function AbsencePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
         <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 text-xl transition-colors">‹</button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-base font-bold text-gray-800">欠席・遅刻連絡</h1>
           <p className="text-xs text-gray-400">{student.full_name}</p>
         </div>
+        <button onClick={() => router.push('/parent/absence/history')}
+          className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg active:bg-gray-50 transition-colors">
+          履歴
+        </button>
       </header>
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
