@@ -50,10 +50,17 @@ export default function CalendarPage() {
     const last  = new Date(year, month + 1, 0)
     const startDow = (first.getDay() + 6) % 7
     const days: (Date | null)[] = Array(startDow).fill(null)
-    for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d))
+    for (let d = 1; d <= last.getDate(); d++) {
+      const date = new Date(year, month, d)
+      const ds = toDateStr(date)
+      days.push(ds >= PERIOD_START && ds <= PERIOD_END ? date : null)
+    }
     while (days.length % 7 !== 0) days.push(null)
     return days
   }
+
+  const canGoPrevMonth = !(viewMonth.getFullYear() === 2026 && viewMonth.getMonth() === 6)
+  const canGoNextMonth = !(viewMonth.getFullYear() === 2026 && viewMonth.getMonth() === 7)
 
   function lessonsOn(ds: string) { return lessons.filter(l => l.date === ds) }
   function absencesOn(ds: string) { return absences.filter(a => a.date === ds) }
@@ -94,12 +101,14 @@ export default function CalendarPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <button onClick={() => setViewMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
-                className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all">‹</button>
+                disabled={!canGoPrevMonth}
+                className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
               <span className="text-base font-bold text-gray-800">
                 {viewMonth.getFullYear()}年{viewMonth.getMonth() + 1}月
               </span>
               <button onClick={() => setViewMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
-                className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all">›</button>
+                disabled={!canGoNextMonth}
+                className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
             </div>
             <div className="grid grid-cols-7 mb-2">
               {['月','火','水','木','金','土','日'].map((d, i) => (
@@ -120,7 +129,7 @@ export default function CalendarPage() {
                   <button key={ds} disabled={!inP}
                     onClick={() => setSelectedDate(isSel ? null : ds)}
                     className={`relative flex flex-col items-center justify-center py-3 rounded-xl text-sm font-medium transition-all active:scale-95
-                      ${!inP ? 'text-gray-200' : ''}
+                      ${!inP ? 'invisible' : ''}
                       ${inP && !isSel && !isToday ? (dow===0?'text-red-500 hover:bg-red-50':dow===6?'text-blue-500 hover:bg-blue-50':'text-gray-700 hover:bg-gray-100') : ''}
                       ${isToday && !isSel ? 'bg-blue-50 text-blue-600' : ''}
                       ${isSel ? 'bg-blue-600 text-white shadow-md' : ''}`}>

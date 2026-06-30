@@ -108,7 +108,7 @@ export default function AbsenceHistoryPage() {
                 <div className="flex gap-2">
                   <button onClick={() => handleDelete(r.id)} disabled={deleting}
                     className="flex-1 bg-red-500 text-white text-sm font-bold py-2.5 rounded-xl active:bg-red-600 disabled:opacity-40">
-                    {deleting ? '取り消し中...' : 'はい、取り消す'}
+                    {deleting ? '取り消し中...' : '取り消す'}
                   </button>
                   <button onClick={() => setConfirmId(null)}
                     className="flex-1 bg-white border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-xl active:bg-gray-50">
