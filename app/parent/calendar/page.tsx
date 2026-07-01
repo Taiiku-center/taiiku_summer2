@@ -76,16 +76,20 @@ export default function CalendarPage() {
   const canNextMonth = !(viewMonth.getFullYear() === 2026 && viewMonth.getMonth() === 7)
   function monthDays(): (Date | null)[] {
     const year = viewMonth.getFullYear(), month = viewMonth.getMonth()
-    const first = new Date(year, month, 1), last = new Date(year, month + 1, 0)
-    const firstDow = first.getDay() === 0 ? 0 : first.getDay() - 1
-    const allDays: (Date | null)[] = []
-    for (let d = 1; d <= last.getDate(); d++) {
-      const date = new Date(year, month, d)
-      if (date.getDay() === 0) continue
-      const ds = toDateStr(date)
-      allDays.push(inPeriod(ds) ? date : null)
+    const monthFirst = new Date(year, month, 1)
+    const monthLast  = new Date(year, month + 1, 0)
+    const periStart  = new Date(PERIOD_START + 'T00:00:00')
+    const periEnd    = new Date(PERIOD_END   + 'T00:00:00')
+    const effStart   = monthFirst < periStart ? periStart : monthFirst
+    const effEnd     = monthLast  > periEnd   ? periEnd   : monthLast
+    let startDow     = (effStart.getDay() + 6) % 7
+    if (effStart.getDay() === 0) startDow = 0
+    const days: (Date | null)[] = Array(startDow).fill(null)
+    const cur = new Date(effStart)
+    while (toDateStr(cur) <= toDateStr(effEnd)) {
+      if (cur.getDay() !== 0) days.push(new Date(cur))
+      cur.setDate(cur.getDate() + 1)
     }
-    const days: (Date | null)[] = [...Array(firstDow).fill(null), ...allDays]
     while (days.length % 6 !== 0) days.push(null)
     return days
   }
