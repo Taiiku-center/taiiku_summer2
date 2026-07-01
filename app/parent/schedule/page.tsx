@@ -31,7 +31,10 @@ export default function SchedulePage() {
   const [existing, setExisting] = useState<Lesson[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [view, setView] = useState<View>('week')
-  const [current, setCurrent] = useState(new Date())
+  const [current, setCurrent] = useState(() => {
+    const t = toDateStr(new Date())
+    return t >= PERIOD_START ? new Date() : new Date(PERIOD_START + 'T00:00:00')
+  })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
   const [msgIsError, setMsgIsError] = useState(false)
