@@ -62,7 +62,6 @@ export default function SchedulePage() {
   }, [router])
 
   useEffect(() => { if (student) fetchExisting() }, [student])
-  useEffect(() => { setSelected(new Set()) }, [current])
 
   async function fetchExisting() {
     if (!student) return
