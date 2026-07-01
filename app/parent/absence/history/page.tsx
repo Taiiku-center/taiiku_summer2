@@ -31,6 +31,7 @@ export default function AbsenceHistoryPage() {
   const [loading, setLoading]       = useState(true)
   const [confirmId, setConfirmId]   = useState<string | null>(null)
   const [deleting, setDeleting]     = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     const s = getSession()
@@ -53,8 +54,14 @@ export default function AbsenceHistoryPage() {
 
   async function handleDelete(id: string) {
     setDeleting(true)
+    setDeleteError('')
     const supabase = createClient()
-    await supabase.from('summer_absences').delete().eq('id', id)
+    const { error } = await supabase.from('summer_absences').delete().eq('id', id)
+    if (error) {
+      setDeleteError('取り消しに失敗しました。再度お試しください。')
+      setDeleting(false)
+      return
+    }
     setRecords(prev => prev.filter(r => r.id !== id))
     setConfirmId(null)
     setDeleting(false)
@@ -73,6 +80,9 @@ export default function AbsenceHistoryPage() {
       </header>
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-3">
+        {deleteError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 text-center">{deleteError}</div>
+        )}
         {loading ? (
           <div className="text-center text-gray-400 py-16">読み込み中...</div>
         ) : records.length === 0 ? (
@@ -96,7 +106,7 @@ export default function AbsenceHistoryPage() {
                 {r.note && <div className="text-xs text-gray-400 mt-1 truncate">{r.note}</div>}
               </div>
               <button
-                onClick={() => setConfirmId(confirmId === r.id ? null : r.id)}
+                onClick={() => { setConfirmId(confirmId === r.id ? null : r.id); setDeleteError('') }}
                 className="flex-shrink-0 text-xs text-red-400 border border-red-200 px-3 py-1.5 rounded-lg active:bg-red-50 transition-colors">
                 取り消し
               </button>

@@ -15,7 +15,7 @@ async function sendEmail(subject: string, body: string) {
   } catch {}
 }
 
-type ContactType = '欠席' | '遅刻' | 'キャンセル'
+type ContactType = '欠席' | '遅刻'
 type Item = { date: string; time: string }
 
 function formatDate(ds: string) {
@@ -75,6 +75,8 @@ export default function AbsencePage() {
 
   async function handleSubmit() {
     if (!student || !date) { setError('日付を選択してください'); return }
+    const slots = slotsForDate(date)
+    if (slots.length === 0) { setError('選択した日付は授業がありません'); return }
     const targets = items.length > 0 ? items : [{ date, time }]
     if (date < PERIOD_START || date > PERIOD_END) { setError('講習期間外の日付です'); return }
     setSubmitting(true)
@@ -82,24 +84,29 @@ export default function AbsencePage() {
     const supabase = createClient()
     const insertedIds: string[] = []
     for (const item of targets) {
-      const { data: inserted } = await supabase.from('summer_absences').insert({
+      const { data: inserted, error: insertError } = await supabase.from('summer_absences').insert({
         student_id: student.id, full_name: student.full_name,
-        date: item.date, time: item.time, type, make_up_request: type === 'キャンセル' ? '未定' : makeUp, note,
+        date: item.date, time: item.time, type, make_up_request: makeUp, note,
       }).select('id').single()
+      if (insertError) {
+        setError('送信に失敗しました。再度お試しください。')
+        setSubmitting(false)
+        return
+      }
       if (inserted) insertedIds.push(inserted.id)
-      const notifType = type === '欠席' ? 'absence' : type === '遅刻' ? 'late' : 'cancel'
-      const notifTitle = type === '欠席' ? '欠席連絡がありました' : type === '遅刻' ? '遅刻連絡がありました' : '連絡キャンセルがありました'
+      const notifType = type === '欠席' ? 'absence' : 'late'
+      const notifTitle = type === '欠席' ? '欠席連絡がありました' : '遅刻連絡がありました'
       await supabase.from('summer_notifications').insert({
         type: notifType, title: notifTitle,
         message: `${student.full_name}（${item.date} ${item.time}〜）`, is_read: false,
       })
-      if (type !== 'キャンセル' && makeUp === '希望する') {
+      if (makeUp === '希望する') {
         await supabase.from('summer_notifications').insert({
           type: 'makeup', title: '振替希望があります',
           message: `${student.full_name}（${item.date} ${item.time}〜）`, is_read: false,
         })
       }
-      const makeupText = type !== 'キャンセル' && makeUp === '希望する' ? '\n振替：希望する' : ''
+      const makeupText = makeUp === '希望する' ? '\n振替：希望する' : ''
       sendEmail(
         `【${type}】${student.full_name} ${item.date} ${item.time}〜`,
         `${student.full_name} さんから${type}の連絡がありました。\n日付：${item.date}\n時間：${item.time}〜${makeupText}\n管理画面でご確認ください。`,
@@ -139,12 +146,10 @@ export default function AbsencePage() {
                 <span className="font-semibold text-gray-700">{item.time}〜</span>
               </div>
             ))}
-            {type !== 'キャンセル' && (
-              <div className="flex justify-between text-sm border-t border-orange-100 pt-2">
-                <span className="text-gray-500">振替</span>
-                <span className="font-semibold text-gray-700">{makeUp}</span>
-              </div>
-            )}
+            <div className="flex justify-between text-sm border-t border-orange-100 pt-2">
+              <span className="text-gray-500">振替</span>
+              <span className="font-semibold text-gray-700">{makeUp}</span>
+            </div>
           </div>
           <button onClick={() => router.push('/parent')}
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">
@@ -179,26 +184,28 @@ export default function AbsencePage() {
         {/* 種類 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h2 className="text-sm font-semibold text-gray-600 mb-3">連絡の種類</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {(['欠席', '遅刻', 'キャンセル'] as ContactType[]).map(t => (
+          <div className="grid grid-cols-2 gap-2">
+            {(['欠席', '遅刻'] as ContactType[]).map(t => (
               <button key={t} onClick={() => setType(t)}
                 className={`py-3.5 rounded-2xl text-sm font-bold border-2 transition-all
                   ${type === t
-                    ? t === 'キャンセル' ? 'bg-gray-600 text-white border-gray-600 shadow-md'
-                    : 'bg-orange-500 text-white border-orange-500 shadow-md'
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-md'
                     : 'border-gray-200 text-gray-500 hover:border-orange-300'}`}>
                 {t}
               </button>
             ))}
           </div>
-          {type === 'キャンセル' && (
-            <p className="text-xs text-gray-400 mt-2">以前に送った欠席・遅刻の連絡をキャンセルする場合に使用</p>
-          )}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-400 mb-2">以前に送った連絡を取り消したい場合は履歴からご操作ください</p>
+            <button onClick={() => router.push('/parent/absence/history')}
+              className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg active:bg-gray-50 transition-colors">
+              履歴を見る →
+            </button>
+          </div>
         </div>
 
-        {/* 日時追加カード（積み重なり型） */}
+        {/* 日時追加カード */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-          {/* 追加済みアイテム */}
           {items.map((item, i) => (
             <div key={i} className="flex items-center gap-3 px-5 py-4 border-b border-orange-100 bg-orange-50 first:rounded-t-2xl">
               <div className="flex-1 min-w-0">
@@ -212,7 +219,6 @@ export default function AbsencePage() {
             </div>
           ))}
 
-          {/* 入力行 */}
           <div className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-600">
@@ -255,21 +261,19 @@ export default function AbsencePage() {
           </div>
         </div>
 
-        {/* 振替（キャンセル時は非表示） */}
-        {type !== 'キャンセル' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-gray-600 mb-3">振替について</h2>
-            <div className="space-y-2">
-              {(['希望する', '希望しない', '未定'] as const).map(opt => (
-                <button key={opt} onClick={() => setMakeUp(opt)}
-                  className={`w-full py-3.5 rounded-xl text-sm font-medium border-2 transition-all text-left px-4
-                    ${makeUp === opt ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold' : 'border-gray-200 text-gray-600 hover:border-blue-300'}`}>
-                  {opt === '希望する' ? '🔄 振替を希望する' : opt === '希望しない' ? '✕ 振替は希望しない' : '❓ まだ未定'}
-                </button>
-              ))}
-            </div>
+        {/* 振替 */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-600 mb-3">振替について</h2>
+          <div className="space-y-2">
+            {(['希望する', '希望しない', '未定'] as const).map(opt => (
+              <button key={opt} onClick={() => setMakeUp(opt)}
+                className={`w-full py-3.5 rounded-xl text-sm font-medium border-2 transition-all text-left px-4
+                  ${makeUp === opt ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold' : 'border-gray-200 text-gray-600 hover:border-blue-300'}`}>
+                {opt === '希望する' ? '🔄 振替を希望する' : opt === '希望しない' ? '✕ 振替は希望しない' : '❓ まだ未定'}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* 備考 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -281,9 +285,8 @@ export default function AbsencePage() {
 
         {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 text-center">{error}</div>}
 
-        <button onClick={handleSubmit} disabled={submitting || !date}
-          className={`w-full text-white font-bold text-lg py-5 rounded-2xl disabled:opacity-40 active:scale-95 transition-all shadow-lg
-            ${type === 'キャンセル' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-orange-500 hover:bg-orange-600'}`}>
+        <button onClick={handleSubmit} disabled={submitting || !date || slots.length === 0}
+          className="w-full bg-orange-500 text-white font-bold text-lg py-5 rounded-2xl disabled:opacity-40 active:scale-95 transition-all shadow-lg hover:bg-orange-600">
           {submitting ? '送信中...' : items.length > 0
             ? `${type}を連絡する（${items.length}件）`
             : `${type}を連絡する`}
