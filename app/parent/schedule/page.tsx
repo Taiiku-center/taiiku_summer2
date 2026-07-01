@@ -61,26 +61,16 @@ export default function SchedulePage() {
     setStudent(s)
   }, [router])
 
-  useEffect(() => { if (student) fetchExisting() }, [student, view, current])
+  useEffect(() => { if (student) fetchExisting() }, [student])
+  useEffect(() => { setSelected(new Set()) }, [current])
 
   async function fetchExisting() {
     if (!student) return
     const supabase = createClient()
-    let from: string, to: string
-    if (view === 'month') {
-      from = toDateStr(new Date(current.getFullYear(), current.getMonth(), 1))
-      to   = toDateStr(new Date(current.getFullYear(), current.getMonth() + 1, 0))
-    } else {
-      const mon = getMondayOf(current)
-      from = toDateStr(mon)
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-      to = toDateStr(sun)
-    }
     const { data } = await supabase.from('summer_lessons2')
       .select('*').eq('student_id', student.id).neq('status', 'cancelled')
-      .gte('date', from).lte('date', to)
+      .gte('date', PERIOD_START).lte('date', PERIOD_END)
     setExisting(data || [])
-    setSelected(new Set())
   }
 
   function existingAt(dateObj: Date, slot: string) {
