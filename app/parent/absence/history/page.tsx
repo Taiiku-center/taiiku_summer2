@@ -107,7 +107,8 @@ export default function AbsenceHistoryPage() {
               </div>
               <button
                 onClick={() => { setConfirmId(confirmId === r.id ? null : r.id); setDeleteError('') }}
-                className="flex-shrink-0 text-xs text-red-400 border border-red-200 px-3 py-1.5 rounded-lg active:bg-red-50 transition-colors">
+                disabled={deleting}
+                className="flex-shrink-0 text-xs text-red-400 border border-red-200 px-3 py-1.5 rounded-lg active:bg-red-50 transition-colors disabled:opacity-40">
                 取り消し
               </button>
             </div>

@@ -73,6 +73,9 @@ export default function AbsencePage() {
         date: lesson.date, time: lesson.start_time, type, make_up_request: makeUp, note,
       }).select('id').single()
       if (insertError) {
+        if (insertedIds.length > 0) {
+          await supabase.from('summer_absences').delete().in('id', insertedIds)
+        }
         setError('送信に失敗しました。再度お試しください。')
         setSubmitting(false)
         return
@@ -247,7 +250,7 @@ export default function AbsencePage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <label className="block text-sm font-semibold text-gray-600 mb-2">備考（任意）</label>
           <textarea value={note} onChange={e => setNote(e.target.value)}
-            placeholder="連絡事項があればご記入ください" rows={3}
+            placeholder={type === '遅刻' ? '到着予定時刻をご記入ください（例：19:30頃到着予定）' : '連絡事項があればご記入ください'} rows={3}
             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 resize-none transition-colors" />
         </div>
 

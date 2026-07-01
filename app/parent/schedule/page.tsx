@@ -88,7 +88,7 @@ export default function SchedulePage() {
     setCancelModal(null)
     setCancelConfirm(false)
     await supabase.from('summer_lessons2').delete().eq('id', id)
-    setMsg('キャンセルしました。新しい日時を選んで選択済できます')
+    setMsg('キャンセルしました。新しい日時を選んで申込みできます')
     setMsgIsError(false)
     setTimeout(() => setMsg(''), 5000)
   }
@@ -106,7 +106,7 @@ export default function SchedulePage() {
     const { error } = await supabase.from('summer_lessons2').insert(rows)
     if (!error) {
       await supabase.from('summer_notifications').insert({
-        type: 'lesson', title: '新しい授業選択済がありました',
+        type: 'lesson', title: '新しい授業申込みがありました',
         message: `${student.full_name}（${count}コマ）`, is_read: false,
       })
       for (const row of rows) {
@@ -115,11 +115,11 @@ export default function SchedulePage() {
     }
     setSaving(false)
     if (error) {
-      setMsg('選択済に失敗しました。再度お試しください。')
+      setMsg('申込みの送信に失敗しました。再度お試しください。')
       setMsgIsError(true)
       setTimeout(() => setMsg(''), 5000)
     } else {
-      setMsg(`✅ ${count}コマの選択済が完了しました`)
+      setMsg(`✅ ${count}コマの申込みが完了しました`)
       setMsgIsError(false)
       setSelected(new Set())
     }
@@ -447,14 +447,14 @@ export default function SchedulePage() {
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
               <div className="p-5 space-y-4">
-                <h2 className="text-base font-bold text-gray-800">選択済済みの日時</h2>
+                <h2 className="text-base font-bold text-gray-800">選択済みの日時</h2>
                 <div className="bg-teal-50 rounded-xl p-4 space-y-1">
                   <div className="text-sm font-semibold text-teal-700">{dateStr}</div>
                   <div className="text-lg font-bold text-teal-800">{timeStr}</div>
                 </div>
                 {!cancelConfirm ? (
                   <>
-                    <p className="text-sm text-gray-500">変更する場合は、この選択済をキャンセルしてから新しい日時を選んでください。</p>
+                    <p className="text-sm text-gray-500">変更する場合は、この申込みをキャンセルしてから新しい日時を選んでください。</p>
                     <div className="space-y-2">
                       <button onClick={() => setCancelConfirm(true)}
                         className="w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl text-sm font-bold active:bg-red-100">
