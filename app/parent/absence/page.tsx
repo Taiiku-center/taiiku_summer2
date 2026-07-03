@@ -27,6 +27,7 @@ export default function AbsencePage() {
   const [lessons, setLessons]             = useState<Lesson[]>([])
   const [loading, setLoading]             = useState(true)
   const [selected, setSelected]           = useState<Set<string>>(new Set())
+  const [openDates, setOpenDates]         = useState<Set<string>>(new Set())
   const [type, setType]                   = useState<ContactType>('欠席')
   const [makeUp, setMakeUp]               = useState<'希望する' | '希望しない' | '未定'>('未定')
   const [note, setNote]                   = useState('')
@@ -58,6 +59,10 @@ export default function AbsencePage() {
 
   function toggleLesson(id: string) {
     setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  function toggleDate(date: string) {
+    setOpenDates(prev => { const n = new Set(prev); n.has(date) ? n.delete(date) : n.add(date); return n })
   }
 
   async function handleSubmit() {
@@ -204,31 +209,41 @@ export default function AbsencePage() {
               申し込み済みの授業がありません
             </div>
           ) : (
-            Object.entries(grouped).map(([date, dayLessons]) => (
-              <div key={date}>
-                <div className="px-5 py-2 bg-gray-50 border-b border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500">{formatDate(date)}</span>
-                </div>
-                {dayLessons.map(lesson => {
-                  const sel = selected.has(lesson.id)
-                  return (
-                    <button key={lesson.id} onClick={() => toggleLesson(lesson.id)}
-                      className={`w-full flex items-center gap-4 px-5 py-4 border-b border-gray-100 last:border-0 transition-colors text-left
-                        ${sel ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
-                      <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
-                        ${sel ? 'border-orange-500 bg-orange-500' : 'border-gray-300'}`}>
-                        {sel && <span className="text-white text-xs font-bold">✓</span>}
-                      </div>
-                      <div className="flex-1">
-                        <div className={`text-sm font-bold ${sel ? 'text-orange-700' : 'text-gray-800'}`}>
-                          {lesson.start_time}〜{lesson.end_time}
+            Object.entries(grouped).map(([date, dayLessons]) => {
+              const open = openDates.has(date)
+              const selCount = dayLessons.filter(l => selected.has(l.id)).length
+              return (
+                <div key={date} className="border-b border-gray-100 last:border-0">
+                  <button onClick={() => toggleDate(date)}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left">
+                    <span className={`text-gray-400 text-sm transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
+                    <span className="flex-1 text-sm font-semibold text-gray-700">{formatDate(date)}</span>
+                    {selCount > 0 && (
+                      <span className="text-xs font-bold text-white bg-orange-500 px-2 py-0.5 rounded-full">{selCount}件選択</span>
+                    )}
+                    <span className="text-xs text-gray-400">{dayLessons.length}コマ</span>
+                  </button>
+                  {open && dayLessons.map(lesson => {
+                    const sel = selected.has(lesson.id)
+                    return (
+                      <button key={lesson.id} onClick={() => toggleLesson(lesson.id)}
+                        className={`w-full flex items-center gap-4 px-5 py-4 border-t border-gray-100 transition-colors text-left
+                          ${sel ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
+                        <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
+                          ${sel ? 'border-orange-500 bg-orange-500' : 'border-gray-300'}`}>
+                          {sel && <span className="text-white text-xs font-bold">✓</span>}
                         </div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            ))
+                        <div className="flex-1">
+                          <div className={`text-sm font-bold ${sel ? 'text-orange-700' : 'text-gray-800'}`}>
+                            {lesson.start_time}〜{lesson.end_time}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })
           )}
         </div>
 
