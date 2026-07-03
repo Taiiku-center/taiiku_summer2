@@ -287,7 +287,7 @@ export default function SchedulePage() {
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />選択済（タップで変更・キャンセル）</div>
             </div>
-            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押し（1.2秒）でドラッグ複数選択</div>
+            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押ししながらドラッグで複数選択</div>
           </div>
         )}
 
