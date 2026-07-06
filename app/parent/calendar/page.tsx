@@ -6,6 +6,15 @@ import { getSession, toDateStr, PERIOD_START, PERIOD_END, type Student, type Les
 
 type CalView = 'month' | 'week' | 'day'
 
+// 授業の合計時間（開始〜終了から算出）を「X時間Y分」に整形
+function totalDuration(list: { start_time: string; end_time: string }[]) {
+  const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+  const min = list.reduce((s, l) => s + (toMin(l.end_time) - toMin(l.start_time)), 0)
+  if (min <= 0) return '0分'
+  const h = Math.floor(min / 60), r = min % 60
+  return `${h > 0 ? `${h}時間` : ''}${r > 0 ? `${r}分` : ''}`
+}
+
 type Absence = {
   id: string
   student_id: string
@@ -193,8 +202,8 @@ export default function CalendarPage() {
         ) : (<>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-2xl p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{lessons.length}</div>
-              <div className="text-sm text-blue-500 mt-1">申込みコマ数</div>
+              <div className="text-3xl font-bold text-blue-600">{totalDuration(lessons)}</div>
+              <div className="text-sm text-blue-500 mt-1">申込み合計時間</div>
             </div>
             <div className="bg-orange-50 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-orange-500">{absences.length}</div>

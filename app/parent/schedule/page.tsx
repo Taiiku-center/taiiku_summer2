@@ -7,6 +7,13 @@ import { getSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_STA
 const DAYS_JP = ['月', '火', '水', '木', '金', '土', '日']
 const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
 
+// 分を「X時間Y分」に整形（1コマ=30分）
+function formatDuration(min: number) {
+  if (min <= 0) return '0分'
+  const h = Math.floor(min / 60), m = min % 60
+  return `${h > 0 ? `${h}時間` : ''}${m > 0 ? `${m}分` : ''}`
+}
+
 function getMondayOf(d: Date) {
   const dow = d.getDay()
   const diff = dow === 0 ? -6 : 1 - dow
@@ -435,8 +442,8 @@ export default function SchedulePage() {
           <button onClick={handleSubmit} disabled={saving || selected.size === 0}
             className="w-full bg-blue-600 text-white py-4 rounded-2xl text-base font-medium active:bg-blue-700 disabled:opacity-50">
             {saving ? '送信中...' : view === 'day'
-              ? `${displayTitle()}の内容で申込む（${selected.size}コマ）`
-              : `この内容で申込む（${selected.size}コマ）`}
+              ? `${displayTitle()}の内容で申込む（${formatDuration(selected.size * 30)}）`
+              : `この内容で申込む（${formatDuration(selected.size * 30)}）`}
           </button>
         )}
       </main>
