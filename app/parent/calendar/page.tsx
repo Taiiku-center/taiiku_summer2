@@ -324,7 +324,7 @@ export default function CalendarPage() {
                 <button onClick={prevDay} disabled={!canPrevDay}
                   className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
                 <span className="text-base font-bold text-gray-800">
-                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
+                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }).replace(/\((.)\)/, '（$1）')}
                 </span>
                 <button onClick={nextDay} disabled={!canNextDay}
                   className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
