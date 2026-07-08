@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { getSession, toDateStr, PERIOD_START, PERIOD_END, type Student, type Lesson } from '../../lib'
+import GuideBox from '../../components/GuideBox'
 
 type CalView = 'month' | 'week' | 'day'
 
@@ -224,9 +225,14 @@ export default function CalendarPage() {
         {loading ? (
           <div className="text-center text-gray-400 py-16">読み込み中...</div>
         ) : (<>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            申込み済みの授業を月・週・日で確認できます。日付をタップすると、その日の予定が見られます。
-          </p>
+          <GuideBox
+            steps={[
+              'ホームから「授業予定を確認する」を選びます。',
+              'カレンダーで申込み済みの授業日を確認します。',
+              '日付を押すと、その日の授業時間や状態を確認できます。',
+            ]}
+            note="予定に変更がある場合は、必ず最新の表示をご確認ください。"
+          />
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-blue-600">{totalDuration(lessons)}</div>

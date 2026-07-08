@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { getSession, toDateStr, PERIOD_START, PERIOD_END, type Student, type Lesson } from '../../lib'
+import GuideBox from '../../components/GuideBox'
 
 const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
 async function sendEmail(subject: string, body: string) {
@@ -172,9 +173,17 @@ export default function AbsencePage() {
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
-        <p className="text-sm text-gray-500 leading-relaxed">
-          欠席・遅刻の連絡はこちらから。① 種類（欠席・遅刻）を選ぶ → ② 連絡したい授業を選ぶ → ③ 送信、の順で進めてください。
-        </p>
+        <GuideBox
+          steps={[
+            'ホームから「欠席・遅刻を連絡する」を選びます。',
+            '「欠席」または「遅刻」を選びます。',
+            '対象の日付と時間を選びます。',
+            '振替希望の有無を選びます。',
+            '必要に応じて連絡事項を入力します。',
+            '「送信」を押します。',
+          ]}
+          note="送信後、教室側に連絡内容が届きます。"
+        />
 
         {/* 種類 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase'
 import { getSession, type Student } from '../../../lib'
+import GuideBox from '../../../components/GuideBox'
 
 type AbsenceRecord = {
   id: string
@@ -80,9 +81,14 @@ export default function AbsenceHistoryPage() {
       </header>
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-3">
-        <p className="text-sm text-gray-500 leading-relaxed">
-          これまでに送った欠席・遅刻の連絡一覧です。送信を取り消したい場合は「取り消し」ボタンから操作してください。
-        </p>
+        <GuideBox
+          steps={[
+            'ホームから「欠席・遅刻の履歴」を選びます。',
+            '過去に送信した欠席・遅刻連絡を確認します。',
+            '日付、時間、内容に間違いがないか確認してください。',
+          ]}
+          note="修正が必要な場合は、教室までお問い合わせください。"
+        />
         {deleteError && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 text-center">{deleteError}</div>
         )}

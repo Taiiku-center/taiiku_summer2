@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { getSession, type Student } from '../../lib'
+import GuideBox from '../../components/GuideBox'
 
 const NOTIFY_EMAIL = 'kusunoki.infinite@gmail.com'
 async function sendEmail(subject: string, body: string) {
@@ -74,9 +75,15 @@ export default function BugReportPage() {
         </div>
       </header>
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-500">
-          アプリで困ったことや不具合があればお知らせください。後ほど対応いたします。
-        </div>
+        <GuideBox
+          steps={[
+            'ホームから「不具合を報告する」を選びます。',
+            '不具合が起きた画面を選びます。',
+            '困っている内容を入力します。',
+            '「送信」を押します。',
+          ]}
+          note="例：「ログインできない」「申込みボタンを押しても進まない」「予定が表示されない」"
+        />
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-2">不具合が起きた画面</label>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../lib/supabase'
 import { setSession } from '../lib'
+import GuideBox from '../components/GuideBox'
 
 export default function LoginPage() {
   const [fourDigitId, setFourDigitId] = useState('')
@@ -43,6 +44,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm mb-3">
+        <GuideBox
+          steps={[
+            'ログイン画面を開きます。',
+            '配布された4桁の番号を入力します。',
+            '生徒氏名を入力します。',
+            '「ログイン」を押します。',
+          ]}
+          note="入力内容が分からない場合は、教室までお問い合わせください。"
+        />
+      </div>
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">☀️</div>
