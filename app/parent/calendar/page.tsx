@@ -42,6 +42,9 @@ export default function CalendarPage() {
   const [absences, setAbsences] = useState<Absence[]>([])
   const [loading,  setLoading]  = useState(true)
   const [calView,  setCalView]  = useState<CalView>('month')
+  const [cancelModal, setCancelModal] = useState<Lesson | null>(null)
+  const [cancelConfirm, setCancelConfirm] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
 
   const [viewMonth, setViewMonth] = useState(() => new Date(PERIOD_START + 'T00:00:00'))
 
@@ -74,6 +77,23 @@ export default function CalendarPage() {
     setLessons(l.data || [])
     setAbsences(a.data || [])
     setLoading(false)
+  }
+
+  async function cancelLesson(id: string) {
+    if (!student) return
+    setCancelling(true)
+    const supabase = createClient()
+    await supabase.from('summer_lessons2').delete().eq('id', id)
+    setCancelModal(null)
+    setCancelConfirm(false)
+    setCancelling(false)
+    await fetchData(student.id)
+  }
+
+  function formatCancelInfo(lesson: Lesson) {
+    const d = new Date(lesson.date + 'T12:00:00')
+    const dateStr = d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }).replace(/\((.)\)/, '（$1）')
+    return { dateStr, timeStr: `${lesson.start_time}〜${lesson.end_time}` }
   }
 
   const lessonsOn  = (ds: string) => lessons.filter(l => l.date === ds)
@@ -150,16 +170,20 @@ export default function CalendarPage() {
       <div className="space-y-3">
         {sL.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <div className="text-xs font-semibold text-blue-600 mb-2">📅 授業申込み</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs font-semibold text-blue-600">📅 授業申込み</div>
+              <div className="text-xs text-gray-400">タップでキャンセル</div>
+            </div>
             <div className="space-y-2">
               {sL.map(l => (
-                <div key={l.id} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-3">
+                <button key={l.id} onClick={() => { setCancelModal(l); setCancelConfirm(false) }}
+                  className="w-full flex items-center justify-between bg-blue-50 hover:bg-blue-100 active:bg-blue-100 rounded-xl px-4 py-3 transition-colors text-left">
                   <span className="text-sm font-medium text-blue-700">{l.start_time}〜{l.end_time}</span>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium
                     ${l.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600'}`}>
                     {l.status === 'confirmed' ? '確定' : '申込済'}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -334,6 +358,55 @@ export default function CalendarPage() {
           )}
         </>)}
       </main>
+
+      {cancelModal && (() => {
+        const { dateStr, timeStr } = formatCancelInfo(cancelModal)
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+              <div className="p-5 space-y-4">
+                <h2 className="text-base font-bold text-gray-800">選択済みの日時</h2>
+                <div className="bg-blue-50 rounded-xl p-4 space-y-1">
+                  <div className="text-sm font-semibold text-blue-700">{dateStr}</div>
+                  <div className="text-lg font-bold text-blue-800">{timeStr}</div>
+                </div>
+                {!cancelConfirm ? (
+                  <>
+                    <p className="text-sm text-gray-500">この授業をキャンセルできます。</p>
+                    <div className="space-y-2">
+                      <button onClick={() => setCancelConfirm(true)}
+                        className="w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl text-sm font-bold active:bg-red-100">
+                        この授業をキャンセルする
+                      </button>
+                      <button onClick={() => { setCancelModal(null); setCancelConfirm(false) }}
+                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        閉じる
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700 font-medium text-center">
+                      本当にキャンセルしますか？<br />
+                      <span className="text-xs font-normal text-red-500">この操作は取り消せません</span>
+                    </div>
+                    <div className="space-y-2">
+                      <button onClick={() => cancelLesson(cancelModal.id)} disabled={cancelling}
+                        className="w-full bg-red-500 text-white py-3 rounded-xl text-sm font-bold active:bg-red-600 disabled:opacity-50">
+                        {cancelling ? 'キャンセル中...' : 'はい、キャンセルします'}
+                      </button>
+                      <button onClick={() => setCancelConfirm(false)} disabled={cancelling}
+                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200 disabled:opacity-50">
+                        やめる
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
