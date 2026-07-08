@@ -47,7 +47,6 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mb-3">
         <GuideBox
           steps={[
-            'ログイン画面を開きます。',
             '配布された4桁の番号を入力します。',
             '生徒氏名を入力します。',
             '「ログイン」を押します。',

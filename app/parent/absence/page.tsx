@@ -175,7 +175,6 @@ export default function AbsencePage() {
 
         <GuideBox
           steps={[
-            'ホームから「欠席・遅刻を連絡する」を選びます。',
             '「欠席」または「遅刻」を選びます。',
             '対象の日付と時間を選びます。',
             '振替希望の有無を選びます。',

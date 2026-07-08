@@ -77,7 +77,6 @@ export default function BugReportPage() {
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
         <GuideBox
           steps={[
-            'ホームから「不具合を報告する」を選びます。',
             '不具合が起きた画面を選びます。',
             '困っている内容を入力します。',
             '「送信」を押します。',
