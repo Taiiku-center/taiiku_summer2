@@ -43,6 +43,10 @@ export default function ParentHomePage() {
           <p className="text-sm text-gray-400 mt-1">7月20日（月）〜 8月29日（土）</p>
         </div>
 
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3 mb-4 text-sm text-blue-700 leading-relaxed">
+          はじめての方はまず「授業を申し込む」から、希望の日時を選んで申込みができます。それ以外のメニューは、申込み後の確認・変更に使います。
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {menus.map(m => (
             <button key={m.href} onClick={() => router.push(m.href)}

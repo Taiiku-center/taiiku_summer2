@@ -80,6 +80,9 @@ export default function AbsenceHistoryPage() {
       </header>
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-3">
+        <p className="text-sm text-gray-500 leading-relaxed">
+          これまでに送った欠席・遅刻の連絡一覧です。送信を取り消したい場合は「取り消し」ボタンから操作してください。
+        </p>
         {deleteError && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 text-center">{deleteError}</div>
         )}

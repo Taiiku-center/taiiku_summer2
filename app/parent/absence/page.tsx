@@ -172,6 +172,10 @@ export default function AbsencePage() {
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
+        <p className="text-sm text-gray-500 leading-relaxed">
+          欠席・遅刻の連絡はこちらから。① 種類（欠席・遅刻）を選ぶ → ② 連絡したい授業を選ぶ → ③ 送信、の順で進めてください。
+        </p>
+
         {/* 種類 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h2 className="text-sm font-semibold text-gray-600 mb-3">連絡の種類</h2>

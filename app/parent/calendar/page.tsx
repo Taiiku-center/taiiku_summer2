@@ -224,6 +224,9 @@ export default function CalendarPage() {
         {loading ? (
           <div className="text-center text-gray-400 py-16">読み込み中...</div>
         ) : (<>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            申込み済みの授業を月・週・日で確認できます。日付をタップすると、その日の予定が見られます。
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-blue-600">{totalDuration(lessons)}</div>
