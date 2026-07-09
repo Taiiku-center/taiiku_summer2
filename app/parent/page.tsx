@@ -46,7 +46,8 @@ export default function ParentHomePage() {
 
         <div className="mb-4">
           <GuideBox
-            defaultOpen
+            alwaysOpen
+            title="以下のメニューから、利用したい機能を選びます"
             bullets={[
               '授業を申し込む',
               '授業予定を確認する',
@@ -54,7 +55,7 @@ export default function ParentHomePage() {
               '欠席・遅刻の履歴を見る',
               '不具合を報告する',
             ]}
-            note="ログイン後、最初に表示される画面です。以下のメニューから、利用したい機能を選びます。はじめての方はまず「授業を申し込む」から、希望の日時を選んで申込みができます。"
+            note="ログイン後、最初に表示される画面です。はじめての方はまず「授業を申し込む」から、希望の日時を選んで申込みができます。"
           />
         </div>
 

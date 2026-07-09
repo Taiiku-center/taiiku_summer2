@@ -1,21 +1,30 @@
 'use client'
 import { useState } from 'react'
 
-export default function GuideBox({ steps, note, bullets, defaultOpen = false }: {
+export default function GuideBox({ steps, note, bullets, defaultOpen = false, alwaysOpen = false, title }: {
   steps?: string[]
   note?: string
   bullets?: string[]
   defaultOpen?: boolean
+  alwaysOpen?: boolean
+  title?: string
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const isOpen = alwaysOpen || open
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
-      <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left">
-        <span className="text-sm font-bold text-blue-700 flex items-center gap-1.5">❓ 使い方を見る</span>
-        <span className={`text-blue-400 text-sm transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
-      </button>
-      {open && (
+      {alwaysOpen ? (
+        <div className="px-4 pt-3 pb-1">
+          <span className="text-sm font-bold text-blue-700">{title || '使い方'}</span>
+        </div>
+      ) : (
+        <button onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left">
+          <span className="text-sm font-bold text-blue-700 flex items-center gap-1.5">{title || '❓ 使い方を見る'}</span>
+          <span className={`text-blue-400 text-sm transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
+        </button>
+      )}
+      {isOpen && (
         <div className="px-4 pb-4 space-y-3">
           {bullets && (
             <ul className="space-y-1.5">
