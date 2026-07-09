@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
-import { getSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_START, PERIOD_END, type Lesson, type Student } from '../../lib'
+import { getSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_START, PERIOD_END, SLOT_CAPACITY, type Lesson, type Student } from '../../lib'
 import GuideBox from '../../components/GuideBox'
 
 const DAYS_JP = ['月', '火', '水', '木', '金', '土', '日']
@@ -37,6 +37,7 @@ export default function SchedulePage() {
   const router = useRouter()
   const [student, setStudent] = useState<Student | null>(null)
   const [existing, setExisting] = useState<Lesson[]>([])
+  const [slotCounts, setSlotCounts] = useState<Record<string, number>>({})
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [view, setView] = useState<View>('week')
   const [current, setCurrent] = useState(() => {
@@ -79,15 +80,38 @@ export default function SchedulePage() {
   async function fetchExisting() {
     if (!student) return
     const supabase = createClient()
-    const { data } = await supabase.from('summer_lessons2')
-      .select('*').eq('student_id', student.id).neq('status', 'cancelled')
-      .gte('date', PERIOD_START).lte('date', PERIOD_END)
-    setExisting(data || [])
+    const [mine, all] = await Promise.all([
+      supabase.from('summer_lessons2')
+        .select('*').eq('student_id', student.id).neq('status', 'cancelled')
+        .gte('date', PERIOD_START).lte('date', PERIOD_END),
+      supabase.from('summer_lessons2')
+        .select('date,start_time').neq('status', 'cancelled')
+        .gte('date', PERIOD_START).lte('date', PERIOD_END),
+    ])
+    setExisting(mine.data || [])
+    setSlotCounts(buildSlotCounts(all.data || []))
+  }
+
+  function buildSlotCounts(rows: { date: string; start_time: string }[]) {
+    const counts: Record<string, number> = {}
+    for (const r of rows) {
+      const k = `${r.date}__${r.start_time}`
+      counts[k] = (counts[k] || 0) + 1
+    }
+    return counts
   }
 
   function existingAt(dateObj: Date, slot: string) {
     const ds = toDateStr(dateObj)
     return existing.find(l => l.date === ds && l.start_time === slot)
+  }
+
+  function countAt(dateObj: Date, slot: string) {
+    return slotCounts[`${toDateStr(dateObj)}__${slot}`] || 0
+  }
+
+  function isFull(dateObj: Date, slot: string) {
+    return !existingAt(dateObj, slot) && countAt(dateObj, slot) >= SLOT_CAPACITY
   }
 
   async function cancelLesson(id: string) {
@@ -110,6 +134,22 @@ export default function SchedulePage() {
       const ds = k.slice(0, sep), slot = k.slice(sep + 2)
       return { student_id: student.id, full_name: student.full_name, date: ds, start_time: slot, end_time: endTime(slot), status: 'pending' }
     })
+
+    // 送信直前に最新の空き状況を再確認（他の生徒がその間に予約した可能性があるため）
+    const { data: latest } = await supabase.from('summer_lessons2')
+      .select('date,start_time').neq('status', 'cancelled')
+      .gte('date', PERIOD_START).lte('date', PERIOD_END)
+    const latestCounts = buildSlotCounts(latest || [])
+    const nowFull = rows.filter(r => (latestCounts[`${r.date}__${r.start_time}`] || 0) >= SLOT_CAPACITY)
+    if (nowFull.length > 0) {
+      setSaving(false)
+      setSlotCounts(latestCounts)
+      setMsg('選択した時間の一部が満席になりました。お手数ですが選び直してください')
+      setMsgIsError(true)
+      setTimeout(() => setMsg(''), 5000)
+      return
+    }
+
     const count = rows.length
     const { error } = await supabase.from('summer_lessons2').insert(rows)
     if (!error) {
@@ -139,12 +179,13 @@ export default function SchedulePage() {
   function toggleCell(dateObj: Date, slot: string) {
     const lesson = existingAt(dateObj, slot)
     if (lesson) { setCancelModal(lesson); return }
+    if (isFull(dateObj, slot)) return
     const k = key(dateObj, slot)
     setSelected(prev => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n })
   }
 
   function paintCell(dateObj: Date, slot: string) {
-    if (existingAt(dateObj, slot)) return
+    if (existingAt(dateObj, slot) || isFull(dateObj, slot)) return
     const k = key(dateObj, slot)
     setSelected(prev => { const n = new Set(prev); paintV.current ? n.add(k) : n.delete(k); return n })
   }
@@ -340,6 +381,7 @@ export default function SchedulePage() {
                         const sel = selected.has(key(d, slot))
                         const inP = isInPeriod(d)
                         const blocked = isBlocked(d, slot)
+                        const full = inP && !blocked && isFull(d, slot)
                         return (
                           <div key={di}
                             data-ds={toDateStr(d)} data-slot={slot}
@@ -347,13 +389,16 @@ export default function SchedulePage() {
                             onPointerMove={onCellPointerMove}
                             onPointerUp={onCellPointerUp}
                             onClick={() => handleCellClick(d, slot)}
-                            className={`border-b border-r border-gray-200 h-10 transition-colors
+                            className={`border-b border-r border-gray-200 h-10 transition-colors flex items-center justify-center
                               ${!inP || blocked ? 'bg-gray-50 cursor-not-allowed' :
                                 lesson ? 'bg-teal-400 active:bg-teal-300 cursor-pointer' :
+                                full ? 'bg-red-50 cursor-not-allowed' :
                                 sel ? 'bg-blue-400 cursor-pointer' :
                                 'hover:bg-blue-50 active:bg-blue-100 cursor-pointer'}`}
                             style={blocked ? { backgroundImage: 'repeating-linear-gradient(45deg, #d1d5db 0px, #d1d5db 1px, transparent 1px, transparent 6px)' } : undefined}
-                          />
+                          >
+                            {full && <span className="text-[9px] font-bold text-red-400 leading-none">満席</span>}
+                          </div>
                         )
                       })}
                     </div>
@@ -420,14 +465,16 @@ export default function SchedulePage() {
               {slots.map(slot => {
                 const lesson = existingAt(current, slot)
                 const sel = selected.has(key(current, slot))
+                const full = isFull(current, slot)
                 return (
-                  <button key={slot} onClick={() => toggleCell(current, slot)}
+                  <button key={slot} onClick={() => toggleCell(current, slot)} disabled={full && !lesson}
                     className={`w-full flex items-center gap-4 px-5 py-4 border-b border-gray-100 text-left transition-colors active:opacity-70
-                      ${lesson ? 'bg-teal-50' : sel ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                      ${lesson ? 'bg-teal-50' : full ? 'bg-red-50 cursor-not-allowed' : sel ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                     <span className="text-sm font-medium text-gray-500 w-14 flex-shrink-0">{slot}</span>
-                    <div className={`flex-1 h-2.5 rounded-full ${lesson ? 'bg-teal-400' : sel ? 'bg-blue-400' : 'bg-gray-100'}`} />
+                    <div className={`flex-1 h-2.5 rounded-full ${lesson ? 'bg-teal-400' : full ? 'bg-red-200' : sel ? 'bg-blue-400' : 'bg-gray-100'}`} />
                     {lesson && <span className="text-xs font-semibold text-teal-600 flex-shrink-0">選択済 ✕</span>}
-                    {!lesson && sel && <span className="text-xs font-semibold text-blue-600 flex-shrink-0">選択中</span>}
+                    {!lesson && full && <span className="text-xs font-semibold text-red-500 flex-shrink-0">満席</span>}
+                    {!lesson && !full && sel && <span className="text-xs font-semibold text-blue-600 flex-shrink-0">選択中</span>}
                   </button>
                 )
               })}

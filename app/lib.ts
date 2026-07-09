@@ -3,6 +3,9 @@
 export const PERIOD_START = '2026-07-20'
 export const PERIOD_END   = '2026-08-29'
 
+// 1時間帯（30分）あたりの定員（満席判定に使用）
+export const SLOT_CAPACITY = 8
+
 // 表示する全スロット（最大範囲 13:00〜21:00）
 export const TIME_SLOTS = [
   '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
