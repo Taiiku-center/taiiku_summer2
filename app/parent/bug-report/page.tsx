@@ -75,7 +75,7 @@ export default function BugReportPage() {
         </div>
       </header>
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
-        <GuideBox
+        <GuideBox alwaysOpen
           steps={[
             '不具合が起きた画面を選びます。',
             '困っている内容を入力します。',

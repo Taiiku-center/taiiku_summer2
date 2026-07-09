@@ -173,7 +173,7 @@ export default function AbsencePage() {
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
-        <GuideBox
+        <GuideBox alwaysOpen
           steps={[
             '「欠席」または「遅刻」を選びます。',
             '対象の日付と時間を選びます。',

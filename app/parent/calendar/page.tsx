@@ -225,7 +225,7 @@ export default function CalendarPage() {
         {loading ? (
           <div className="text-center text-gray-400 py-16">読み込み中...</div>
         ) : (<>
-          <GuideBox
+          <GuideBox alwaysOpen
             steps={[
               'カレンダーで申込み済みの授業日を確認します。',
               '日付を押すと、その日の授業時間や状態を確認できます。',

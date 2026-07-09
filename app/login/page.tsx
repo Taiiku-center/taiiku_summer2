@@ -45,7 +45,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm mb-3">
-        <GuideBox
+        <GuideBox alwaysOpen
           steps={[
             '配布された4桁の番号を入力します。',
             '生徒氏名を入力します。',

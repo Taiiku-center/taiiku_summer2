@@ -81,7 +81,7 @@ export default function AbsenceHistoryPage() {
       </header>
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-3">
-        <GuideBox
+        <GuideBox alwaysOpen
           steps={[
             '過去に送信した欠席・遅刻連絡を確認します。',
             '日付、時間、内容に間違いがないか確認してください。',
