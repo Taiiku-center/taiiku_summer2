@@ -197,7 +197,11 @@ export default function SchedulePage() {
   }
 
   function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
-  function isBlocked(d: Date, slot: string) { return !isSlotAvailable(d.getDay(), slot) }
+  function isBlocked(d: Date, slot: string) {
+    // 8/22は模擬試験のため、終日授業なし
+    if (toDateStr(d) === '2026-08-22') return true
+    return !isSlotAvailable(d.getDay(), slot)
+  }
 
   function onCellPointerDown(e: React.PointerEvent, d: Date, slot: string) {
     if (!isInPeriod(d) || isBlocked(d, slot)) return
