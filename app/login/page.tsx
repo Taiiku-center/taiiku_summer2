@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../lib/supabase'
 import { setSession } from '../lib'
@@ -21,7 +21,11 @@ function LoginInner() {
   const [error, setError]             = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const expired = searchParams.get('expired') === '1'
+  const [expired] = useState(() => searchParams.get('expired') === '1')
+
+  useEffect(() => {
+    if (expired) window.history.replaceState(null, '', '/login')
+  }, [expired])
 
   async function handleLogin() {
     if (fourDigitId.length !== 4 || !lastName.trim() || !firstName.trim()) {
