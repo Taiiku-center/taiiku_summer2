@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
-import { getSession, toDateStr, PERIOD_START, PERIOD_END, type Student, type Lesson } from '../../lib'
+import { getSession, toDateStr, PERIOD_START, PERIOD_END, TIME_SLOTS, type Student, type Lesson } from '../../lib'
 import GuideBox from '../../components/GuideBox'
 
 type CalView = 'month' | 'week' | 'day'
@@ -160,55 +160,6 @@ export default function CalendarPage() {
     )
   }
 
-  function DayDetail({ ds }: { ds: string }) {
-    const sL = lessonsOn(ds), sA = absencesOn(ds)
-    if (sL.length === 0 && sA.length === 0) return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
-        この日は予定がありません
-      </div>
-    )
-    return (
-      <div className="space-y-3">
-        {sL.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-semibold text-blue-600">📅 授業申込み</div>
-              <div className="text-xs text-gray-400">タップでキャンセル</div>
-            </div>
-            <div className="space-y-2">
-              {sL.map(l => (
-                <button key={l.id} onClick={() => { setCancelModal(l); setCancelConfirm(false) }}
-                  className="w-full flex items-center justify-between bg-blue-50 hover:bg-blue-100 active:bg-blue-100 rounded-xl px-4 py-3 transition-colors text-left">
-                  <span className="text-sm font-medium text-blue-700">{l.start_time}〜{l.end_time}</span>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium
-                    ${l.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600'}`}>
-                    {l.status === 'confirmed' ? '確定' : '申込済'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {sA.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <div className="text-xs font-semibold text-orange-600 mb-2">📢 欠席・遅刻連絡</div>
-            <div className="space-y-2">
-              {sA.map(a => (
-                <div key={a.id} className="bg-orange-50 rounded-xl px-4 py-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-orange-700">{a.type}（{a.time}〜）</span>
-                    <span className="text-xs text-orange-500">振替：{a.make_up_request}</span>
-                  </div>
-                  {a.note && <p className="text-xs text-orange-600">{a.note}</p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
   if (!student) return null
 
   return (
@@ -302,10 +253,10 @@ export default function CalendarPage() {
             </div>
           )}
 
-          {/* ══ 週ビュー ══ */}
+          {/* ══ 週ビュー（時間グリッド） ══ */}
           {calView === 'week' && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between p-4 pb-2">
                 <button onClick={prevWeek} disabled={!canPrevWeek}
                   className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
                 <span className="text-base font-bold text-gray-800">
@@ -314,42 +265,66 @@ export default function CalendarPage() {
                 <button onClick={nextWeek} disabled={!canNextWeek}
                   className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
               </div>
-              <div className="grid grid-cols-6 gap-1">
-                {DOW6.map((d, i) => (
-                  <div key={d} className={`text-center text-sm font-bold py-1 ${i === 5 ? 'text-blue-500' : 'text-gray-400'}`}>{d}</div>
-                ))}
-                {weekDays.map(d => {
-                  const ds = toDateStr(d)
-                  const inP = inPeriod(ds)
-                  const isToday = ds === today
-                  const isSel = selectedDate === ds
-                  const dow = d.getDay()
-                  return (
-                    <button key={ds} disabled={!inP}
-                      onClick={() => { setSelectedDate(ds); setCalView('day') }}
-                      className={`relative flex flex-col items-center justify-center py-3 rounded-xl text-sm font-medium transition-all active:scale-95
-                        ${!inP ? 'invisible' : ''}
-                        ${!isSel && !isToday && inP ? (dow === 6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100') : ''}
-                        ${isToday && !isSel ? 'bg-blue-50 text-blue-600' : ''}
-                        ${isSel ? 'bg-blue-600 text-white shadow-md' : ''}`}>
-                      <span className="text-base font-bold">{d.getDate()}</span>
-                      {inP && <DotRow ds={ds} />}
-                    </button>
-                  )
-                })}
+
+              <div className="overflow-x-auto">
+                <div className="min-w-[420px] overflow-y-auto" style={{ maxHeight: '65vh', WebkitUserSelect: 'none' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '52px repeat(6, 1fr)' }}>
+                    <div className="border-b border-r border-gray-200 bg-white sticky top-0 left-0 z-20" />
+                    {weekDays.map((d, i) => {
+                      const ds = toDateStr(d)
+                      const inP = inPeriod(ds)
+                      const isToday = ds === today
+                      return (
+                        <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
+                          ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''} ${isToday ? 'bg-blue-50' : ''}`}>
+                          {DOW6[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
+                        </div>
+                      )
+                    })}
+                    {TIME_SLOTS.map(slot => (
+                      <div key={slot} className="contents">
+                        <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-[10px] text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
+                          {slot}
+                        </div>
+                        {weekDays.map((d, di) => {
+                          const ds = toDateStr(d)
+                          const inP = inPeriod(ds)
+                          const lesson = inP ? lessons.find(l => l.date === ds && l.start_time === slot) : undefined
+                          const absence = inP ? absences.find(a => a.date === ds && a.time === slot) : undefined
+                          return (
+                            <button key={di}
+                              disabled={!lesson}
+                              onClick={() => { if (lesson) { setCancelModal(lesson); setCancelConfirm(false) } }}
+                              className={`border-b border-r border-gray-200 h-10 flex items-center justify-center text-[9px] font-bold leading-none transition-colors
+                                ${!inP ? 'bg-gray-50' :
+                                  lesson ? `${lesson.status === 'confirmed' ? 'bg-green-400 active:bg-green-300' : 'bg-blue-400 active:bg-blue-300'} text-white cursor-pointer` :
+                                  absence ? 'bg-orange-100' : ''}`}>
+                              {lesson && (lesson.status === 'confirmed' ? '確定' : '申込')}
+                              {!lesson && absence && '⚠'}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-5 pt-4 border-t border-gray-100 justify-center">
+
+              <div className="flex gap-5 p-4 pt-3 border-t border-gray-100 justify-center flex-wrap">
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> 申込あり
+                  <span className="w-3 h-3 rounded bg-blue-400 inline-block" /> 申込済
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span className="w-3 h-3 rounded-full bg-orange-400 inline-block" /> 欠席・遅刻連絡
+                  <span className="w-3 h-3 rounded bg-green-400 inline-block" /> 確定
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <span className="w-3 h-3 rounded bg-orange-100 inline-block" /> 欠席・遅刻連絡
                 </div>
               </div>
             </div>
           )}
 
-          {/* ══ 日ビュー ══ */}
+          {/* ══ 日ビュー（時間グリッド） ══ */}
           {calView === 'day' && (
             <>
               <div className="flex items-center justify-between">
@@ -361,7 +336,33 @@ export default function CalendarPage() {
                 <button onClick={nextDay} disabled={!canNextDay}
                   className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
               </div>
-              <DayDetail ds={selectedDate} />
+
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-y-auto" style={{ maxHeight: '65vh' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr' }}>
+                    {TIME_SLOTS.map(slot => {
+                      const lesson = lessons.find(l => l.date === selectedDate && l.start_time === slot)
+                      const absence = absences.find(a => a.date === selectedDate && a.time === slot)
+                      return (
+                        <div key={slot} className="contents">
+                          <div className="border-b border-r border-gray-200 flex items-start justify-end pr-1.5 pt-1 text-[10px] text-gray-400 h-12 whitespace-nowrap bg-white">
+                            {slot}
+                          </div>
+                          <button
+                            disabled={!lesson}
+                            onClick={() => { if (lesson) { setCancelModal(lesson); setCancelConfirm(false) } }}
+                            className={`border-b border-gray-200 h-12 flex items-center px-3 text-xs font-bold transition-colors text-left
+                              ${lesson ? `${lesson.status === 'confirmed' ? 'bg-green-400 active:bg-green-300' : 'bg-blue-400 active:bg-blue-300'} text-white cursor-pointer` :
+                                absence ? 'bg-orange-100 text-orange-600' : ''}`}>
+                            {lesson && `${lesson.status === 'confirmed' ? '確定' : '申込済'}（${lesson.start_time}〜${lesson.end_time}）`}
+                            {!lesson && absence && `⚠ ${absence.type}連絡`}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </>)}
