@@ -1,17 +1,27 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../lib/supabase'
 import { setSession } from '../lib'
 import GuideBox from '../components/GuideBox'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  )
+}
+
+function LoginInner() {
   const [fourDigitId, setFourDigitId] = useState('')
   const [lastName, setLastName]       = useState('')
   const [firstName, setFirstName]     = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const expired = searchParams.get('expired') === '1'
 
   async function handleLogin() {
     if (fourDigitId.length !== 4 || !lastName.trim() || !firstName.trim()) {
@@ -54,6 +64,11 @@ export default function LoginPage() {
           note="入力内容が分からない場合は、教室までお問い合わせください。"
         />
       </div>
+      {expired && (
+        <div className="w-full max-w-sm mb-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700 text-center font-medium">
+          ログイン情報が更新されました。お手数ですが、もう一度ログインしてください
+        </div>
+      )}
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">☀️</div>

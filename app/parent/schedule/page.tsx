@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
-import { getSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_START, PERIOD_END, SLOT_CAPACITY, type Lesson, type Student } from '../../lib'
+import { getSession, clearSession, TIME_SLOTS, isSlotAvailable, endTime, toDateStr, PERIOD_START, PERIOD_END, SLOT_CAPACITY, type Lesson, type Student } from '../../lib'
 import GuideBox from '../../components/GuideBox'
 
 const DAYS_JP = ['月', '火', '水', '木', '金', '土', '日']
@@ -163,6 +163,12 @@ export default function SchedulePage() {
     }
     setSaving(false)
     if (error) {
+      console.error('lesson insert failed:', error)
+      if (error.code === '23503') {
+        clearSession()
+        router.replace('/login?expired=1')
+        return
+      }
       setMsg('申込みの送信に失敗しました。再度お試しください。')
       setMsgIsError(true)
       setTimeout(() => setMsg(''), 5000)
