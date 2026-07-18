@@ -198,8 +198,11 @@ export default function SchedulePage() {
 
   function isInPeriod(d: Date) { const s = toDateStr(d); return s >= PERIOD_START && s <= PERIOD_END }
   function isBlocked(d: Date, slot: string) {
+    const ds = toDateStr(d)
+    // 8/13〜8/15はお盆期間のため休塾日
+    if (ds >= '2026-08-13' && ds <= '2026-08-15') return true
     // 8/22は模擬試験のため、終日授業なし
-    if (toDateStr(d) === '2026-08-22') return true
+    if (ds === '2026-08-22') return true
     return !isSlotAvailable(d.getDay(), slot)
   }
 
@@ -359,6 +362,12 @@ export default function SchedulePage() {
           </div>
         )}
 
+        {view === 'week' && (
+          <div className="bg-amber-50 rounded-xl px-4 py-3 text-xs text-amber-700">
+            <span className="font-bold">8月13日（木）〜8月15日（土）</span>は、お盆期間のため休塾日となります
+          </div>
+        )}
+
         {/* 週グリッド: JSXをインラインで記述することでstate更新時の再マウントを防止 */}
         {view === 'week' && (
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden select-none">
@@ -465,8 +474,11 @@ export default function SchedulePage() {
 
         {/* 日リスト */}
         {view === 'day' && (() => {
-          const dow = current.getDay()
-          const slots = TIME_SLOTS.filter(s => isSlotAvailable(dow, s))
+          const ds = toDateStr(current)
+          if (ds >= '2026-08-13' && ds <= '2026-08-15') return (
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-black">お盆期間（8月13日〜8月15日）は休塾日のため授業がありません</div>
+          )
+          const slots = TIME_SLOTS.filter(s => !isBlocked(current, s))
           if (slots.length === 0) return (
             <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-black">この曜日は授業がありません</div>
           )
