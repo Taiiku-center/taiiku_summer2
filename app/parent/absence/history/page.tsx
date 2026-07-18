@@ -22,7 +22,7 @@ function formatDate(ds: string) {
 const TYPE_COLOR: Record<string, string> = {
   '欠席': 'bg-orange-100 text-orange-700',
   '遅刻': 'bg-yellow-100 text-yellow-700',
-  'キャンセル': 'bg-gray-100 text-gray-600',
+  'キャンセル': 'bg-gray-100 text-black',
 }
 
 export default function AbsenceHistoryPage() {
@@ -73,10 +73,10 @@ export default function AbsenceHistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 text-xl transition-colors">‹</button>
+        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-black text-xl transition-colors">‹</button>
         <div>
-          <h1 className="text-base font-bold text-gray-800">欠席・遅刻の履歴</h1>
-          <p className="text-xs text-gray-400">{student.full_name}</p>
+          <h1 className="text-base font-bold text-black">欠席・遅刻の履歴</h1>
+          <p className="text-xs text-black">{student.full_name}</p>
         </div>
       </header>
 
@@ -92,9 +92,9 @@ export default function AbsenceHistoryPage() {
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 text-center">{deleteError}</div>
         )}
         {loading ? (
-          <div className="text-center text-gray-400 py-16">読み込み中...</div>
+          <div className="text-center text-black py-16">読み込み中...</div>
         ) : records.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center text-gray-400">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center text-black">
             連絡の履歴はありません
           </div>
         ) : records.map(r => (
@@ -102,16 +102,16 @@ export default function AbsenceHistoryPage() {
             <div className="px-5 py-4 flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${TYPE_COLOR[r.type] || 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${TYPE_COLOR[r.type] || 'bg-gray-100 text-black'}`}>
                     {r.type}
                   </span>
                   {r.make_up_request === '希望する' && (
                     <span className="text-xs bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">振替希望</span>
                   )}
                 </div>
-                <div className="text-sm font-semibold text-gray-800">{formatDate(r.date)}</div>
-                <div className="text-sm text-gray-500">{r.time}〜</div>
-                {r.note && <div className="text-xs text-gray-400 mt-1 truncate">{r.note}</div>}
+                <div className="text-sm font-semibold text-black">{formatDate(r.date)}</div>
+                <div className="text-sm text-black">{r.time}〜</div>
+                {r.note && <div className="text-xs text-black mt-1 truncate">{r.note}</div>}
               </div>
               <button
                 onClick={() => { setConfirmId(confirmId === r.id ? null : r.id); setDeleteError('') }}
@@ -130,7 +130,7 @@ export default function AbsenceHistoryPage() {
                     {deleting ? '取り消し中...' : '取り消す'}
                   </button>
                   <button onClick={() => setConfirmId(null)}
-                    className="flex-1 bg-white border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-xl active:bg-gray-50">
+                    className="flex-1 bg-white border border-gray-200 text-black text-sm font-medium py-2.5 rounded-xl active:bg-gray-50">
                     やめる
                   </button>
                 </div>

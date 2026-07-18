@@ -165,16 +165,16 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 text-xl transition-colors">‹</button>
+        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-black text-xl transition-colors">‹</button>
         <div>
-          <h1 className="text-base font-bold text-gray-800">授業予定を確認する</h1>
-          <p className="text-xs text-gray-400">{student.full_name}</p>
+          <h1 className="text-base font-bold text-black">授業予定を確認する</h1>
+          <p className="text-xs text-black">{student.full_name}</p>
         </div>
       </header>
 
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
         {loading ? (
-          <div className="text-center text-gray-400 py-16">読み込み中...</div>
+          <div className="text-center text-black py-16">読み込み中...</div>
         ) : (<>
           <GuideBox alwaysOpen
             steps={[
@@ -199,7 +199,7 @@ export default function CalendarPage() {
             {(['month', 'week', 'day'] as CalView[]).map((v, i) => (
               <button key={v} onClick={() => setCalView(v)}
                 className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-colors
-                  ${calView === v ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>
+                  ${calView === v ? 'bg-white text-blue-600 shadow-sm' : 'text-black'}`}>
                 {['月', '週', '日'][i]}
               </button>
             ))}
@@ -211,15 +211,15 @@ export default function CalendarPage() {
               <div className="flex items-center justify-between mb-4">
                 <button onClick={() => setViewMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
                   disabled={!canPrevMonth}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
-                <span className="text-base font-bold text-gray-800">{viewMonth.getFullYear()}年{viewMonth.getMonth() + 1}月</span>
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
+                <span className="text-base font-bold text-black">{viewMonth.getFullYear()}年{viewMonth.getMonth() + 1}月</span>
                 <button onClick={() => setViewMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
                   disabled={!canNextMonth}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
               </div>
               <div className="grid grid-cols-6 mb-2">
                 {DOW6.map((d, i) => (
-                  <div key={d} className={`text-center text-sm font-bold py-2 ${i === 5 ? 'text-blue-500' : 'text-gray-400'}`}>{d}</div>
+                  <div key={d} className={`text-center text-sm font-bold py-2 ${i === 5 ? 'text-blue-500' : 'text-black'}`}>{d}</div>
                 ))}
               </div>
               <div className="grid grid-cols-6 gap-1">
@@ -233,7 +233,7 @@ export default function CalendarPage() {
                     <button key={ds}
                       onClick={() => { setSelectedDate(ds); setCalView('day') }}
                       className={`relative flex flex-col items-center justify-center py-3 rounded-xl text-sm font-medium transition-all active:scale-95
-                        ${!isSel && !isToday ? (dow === 6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100') : ''}
+                        ${!isSel && !isToday ? (dow === 6 ? 'text-blue-500 hover:bg-blue-50' : 'text-black hover:bg-gray-100') : ''}
                         ${isToday && !isSel ? 'bg-blue-50 text-blue-600' : ''}
                         ${isSel ? 'bg-blue-600 text-white shadow-md' : ''}`}>
                       <span className="text-base font-bold">{d.getDate()}</span>
@@ -243,10 +243,10 @@ export default function CalendarPage() {
                 })}
               </div>
               <div className="flex gap-5 mt-4 pt-4 border-t border-gray-100 justify-center">
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 text-sm text-black">
                   <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> 申込あり
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 text-sm text-black">
                   <span className="w-3 h-3 rounded-full bg-orange-400 inline-block" /> 欠席・遅刻連絡
                 </div>
               </div>
@@ -258,12 +258,12 @@ export default function CalendarPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between p-4 pb-2">
                 <button onClick={prevWeek} disabled={!canPrevWeek}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
-                <span className="text-base font-bold text-gray-800">
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
+                <span className="text-base font-bold text-black">
                   {weekDays[0].getMonth()+1}/{weekDays[0].getDate()} 〜 {weekDays[5].getMonth()+1}/{weekDays[5].getDate()}
                 </span>
                 <button onClick={nextWeek} disabled={!canNextWeek}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
               </div>
 
               <div className="overflow-x-auto">
@@ -276,14 +276,14 @@ export default function CalendarPage() {
                       const isToday = ds === today
                       return (
                         <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
-                          ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''} ${isToday ? 'bg-blue-50' : ''}`}>
-                          {DOW6[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
+                          ${i===5?'text-blue-500':'text-black'} ${!inP ? 'opacity-30' : ''} ${isToday ? 'bg-blue-50' : ''}`}>
+                          {DOW6[i]}<br/><span className="font-normal text-black">{d.getMonth()+1}/{d.getDate()}</span>
                         </div>
                       )
                     })}
                     {TIME_SLOTS.map(slot => (
                       <div key={slot} className="contents">
-                        <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-[10px] text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
+                        <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-[10px] text-black h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
                           {slot}
                         </div>
                         {weekDays.map((d, di) => {
@@ -311,13 +311,13 @@ export default function CalendarPage() {
               </div>
 
               <div className="flex gap-5 p-4 pt-3 border-t border-gray-100 justify-center flex-wrap">
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 text-sm text-black">
                   <span className="w-3 h-3 rounded bg-blue-400 inline-block" /> 申込済
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 text-sm text-black">
                   <span className="w-3 h-3 rounded bg-green-400 inline-block" /> 確定
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 text-sm text-black">
                   <span className="w-3 h-3 rounded bg-orange-100 inline-block" /> 欠席・遅刻連絡
                 </div>
               </div>
@@ -329,12 +329,12 @@ export default function CalendarPage() {
             <>
               <div className="flex items-center justify-between">
                 <button onClick={prevDay} disabled={!canPrevDay}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
-                <span className="text-base font-bold text-gray-800">
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">‹</button>
+                <span className="text-base font-bold text-black">
                   {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }).replace(/\((.)\)/, '（$1）')}
                 </span>
                 <button onClick={nextDay} disabled={!canNextDay}
-                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
+                  className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-black text-xl hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-20">›</button>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -345,7 +345,7 @@ export default function CalendarPage() {
                       const absence = absences.find(a => a.date === selectedDate && a.time === slot)
                       return (
                         <div key={slot} className="contents">
-                          <div className="border-b border-r border-gray-200 flex items-start justify-end pr-1.5 pt-1 text-[10px] text-gray-400 h-12 whitespace-nowrap bg-white">
+                          <div className="border-b border-r border-gray-200 flex items-start justify-end pr-1.5 pt-1 text-[10px] text-black h-12 whitespace-nowrap bg-white">
                             {slot}
                           </div>
                           <button
@@ -374,21 +374,21 @@ export default function CalendarPage() {
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
               <div className="p-5 space-y-4">
-                <h2 className="text-base font-bold text-gray-800">選択済みの日時</h2>
+                <h2 className="text-base font-bold text-black">選択済みの日時</h2>
                 <div className="bg-blue-50 rounded-xl p-4 space-y-1">
                   <div className="text-sm font-semibold text-blue-700">{dateStr}</div>
                   <div className="text-lg font-bold text-blue-800">{timeStr}</div>
                 </div>
                 {!cancelConfirm ? (
                   <>
-                    <p className="text-sm text-gray-500">この授業をキャンセルできます。</p>
+                    <p className="text-sm text-black">この授業をキャンセルできます。</p>
                     <div className="space-y-2">
                       <button onClick={() => setCancelConfirm(true)}
                         className="w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl text-sm font-bold active:bg-red-100">
                         この授業をキャンセルする
                       </button>
                       <button onClick={() => { setCancelModal(null); setCancelConfirm(false) }}
-                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        className="w-full bg-gray-100 text-black py-3 rounded-xl text-sm font-medium active:bg-gray-200">
                         閉じる
                       </button>
                     </div>
@@ -405,7 +405,7 @@ export default function CalendarPage() {
                         {cancelling ? 'キャンセル中...' : 'はい、キャンセルします'}
                       </button>
                       <button onClick={() => setCancelConfirm(false)} disabled={cancelling}
-                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200 disabled:opacity-50">
+                        className="w-full bg-gray-100 text-black py-3 rounded-xl text-sm font-medium active:bg-gray-200 disabled:opacity-50">
                         やめる
                       </button>
                     </div>

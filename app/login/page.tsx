@@ -76,13 +76,13 @@ function LoginInner() {
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">☀️</div>
-          <h1 className="text-2xl font-bold text-gray-800">夏期講習</h1>
-          <p className="text-sm text-gray-400 mt-1">2026年 大育進学センター</p>
+          <h1 className="text-2xl font-bold text-black">夏期講習</h1>
+          <p className="text-sm text-black mt-1">2026年 大育進学センター</p>
         </div>
 
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">4桁の数字ID</label>
+            <label className="block text-sm font-semibold text-black mb-2">4桁の数字ID</label>
             <input
               type="text"
               inputMode="numeric"
@@ -95,10 +95,10 @@ function LoginInner() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">生徒のお名前</label>
+            <label className="block text-sm font-semibold text-black mb-2">生徒のお名前</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-gray-400 mb-1.5 text-center">姓（苗字）</p>
+                <p className="text-xs text-black mb-1.5 text-center">姓（苗字）</p>
                 <input
                   type="text"
                   value={lastName}
@@ -108,7 +108,7 @@ function LoginInner() {
                 />
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1.5 text-center">名（名前）</p>
+                <p className="text-xs text-black mb-1.5 text-center">名（名前）</p>
                 <input
                   type="text"
                   value={firstName}

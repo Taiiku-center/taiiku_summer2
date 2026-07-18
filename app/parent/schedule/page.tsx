@@ -317,8 +317,8 @@ export default function SchedulePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={() => router.back()} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold active:bg-gray-200">← 戻る</button>
-          <h1 className="text-base font-bold text-gray-800">授業を申し込む</h1>
+          <button onClick={() => router.back()} className="bg-gray-100 text-black px-4 py-2 rounded-xl text-sm font-bold active:bg-gray-200">← 戻る</button>
+          <h1 className="text-base font-bold text-black">授業を申し込む</h1>
         </div>
       </header>
 
@@ -337,25 +337,25 @@ export default function SchedulePage() {
             {(['month','week','day'] as View[]).map(v => (
               <button key={v} onClick={() => setView(v)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${view === v ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>
+                  ${view === v ? 'bg-white text-blue-600 shadow-sm' : 'text-black'}`}>
                 {v === 'month' ? '月' : v === 'week' ? '週' : '日'}
               </button>
             ))}
           </div>
           <button onClick={navigatePrev} disabled={!canGoPrev()}
             className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200 disabled:opacity-30">←</button>
-          <div className="flex-1 text-center font-bold text-gray-800 text-sm">{displayTitle()}</div>
+          <div className="flex-1 text-center font-bold text-black text-sm">{displayTitle()}</div>
           <button onClick={navigateNext} disabled={!canGoNext()}
             className="bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold active:bg-gray-200 disabled:opacity-30">→</button>
         </div>
 
         {view !== 'month' && (
           <div className="space-y-1.5">
-            <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+            <div className="flex items-center gap-4 text-xs text-black flex-wrap">
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-blue-400 rounded" />選択中</div>
               <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-teal-400 rounded" />選択済（タップで変更・キャンセル）</div>
             </div>
-            <div className="text-xs text-gray-400">タップで1コマ選択 ／ 長押ししながらドラッグで複数選択</div>
+            <div className="text-xs text-black">タップで1コマ選択 ／ 長押ししながらドラッグで複数選択</div>
           </div>
         )}
 
@@ -376,14 +376,14 @@ export default function SchedulePage() {
                     const inP = isInPeriod(d)
                     return (
                       <div key={i} className={`border-b border-r border-gray-200 py-2 text-center text-xs font-bold leading-tight bg-white sticky top-0 z-10
-                        ${i===5?'text-blue-500':'text-gray-600'} ${!inP ? 'opacity-30' : ''}`}>
-                        {DAYS_JP[i]}<br/><span className="font-normal text-gray-400">{d.getMonth()+1}/{d.getDate()}</span>
+                        ${i===5?'text-blue-500':'text-black'} ${!inP ? 'opacity-30' : ''}`}>
+                        {DAYS_JP[i]}<br/><span className="font-normal text-black">{d.getMonth()+1}/{d.getDate()}</span>
                       </div>
                     )
                   })}
                   {TIME_SLOTS.map(slot => (
                     <div key={slot} className="contents">
-                      <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-gray-400 h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
+                      <div className="border-b border-r border-gray-200 flex items-center justify-end pr-1.5 text-xs text-black h-10 whitespace-nowrap bg-white sticky left-0 z-[5]">
                         {slot}
                       </div>
                       {wd.slice(0, 6).map((d, di) => {
@@ -436,7 +436,7 @@ export default function SchedulePage() {
             <div className="bg-white rounded-2xl shadow-sm p-4">
               <div className="grid grid-cols-6 mb-1">
                 {['月','火','水','木','金','土'].map((d, i) => (
-                  <div key={d} className={`text-center text-xs font-bold py-2 ${i===5?'text-blue-500':'text-gray-500'}`}>{d}</div>
+                  <div key={d} className={`text-center text-xs font-bold py-2 ${i===5?'text-blue-500':'text-black'}`}>{d}</div>
                 ))}
               </div>
               <div className="grid grid-cols-6 gap-1">
@@ -448,15 +448,15 @@ export default function SchedulePage() {
                   return (
                     <button key={i} disabled={!inP} onClick={() => { if (inP) { setCurrent(d); setView('week') } }}
                       className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors
-                        ${!inP ? 'text-gray-200' : isToday ? 'bg-blue-600 text-white' :
-                          dow===6 ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-700 hover:bg-gray-100'}`}>
+                        ${!inP ? 'text-black' : isToday ? 'bg-blue-600 text-white' :
+                          dow===6 ? 'text-blue-500 hover:bg-blue-50' : 'text-black hover:bg-gray-100'}`}>
                       {d.getDate()}
                       {has && inP && <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-teal-500'}`} />}
                     </button>
                   )
                 })}
               </div>
-              <p className="text-xs text-gray-400 mt-3 text-center">
+              <p className="text-xs text-black mt-3 text-center">
                 日付をタップすると週ビューに切り替わります{submittedDates.size > 0 ? '（● = 選択済）' : ''}
               </p>
             </div>
@@ -468,7 +468,7 @@ export default function SchedulePage() {
           const dow = current.getDay()
           const slots = TIME_SLOTS.filter(s => isSlotAvailable(dow, s))
           if (slots.length === 0) return (
-            <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400">この曜日は授業がありません</div>
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-black">この曜日は授業がありません</div>
           )
           return (
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -480,7 +480,7 @@ export default function SchedulePage() {
                   <button key={slot} onClick={() => toggleCell(current, slot)} disabled={full && !lesson}
                     className={`w-full flex items-center gap-4 px-5 py-4 border-b border-gray-100 text-left transition-colors active:opacity-70
                       ${lesson ? 'bg-teal-50' : full ? 'bg-red-50 cursor-not-allowed' : sel ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
-                    <span className="text-sm font-medium text-gray-500 w-14 flex-shrink-0">{slot}</span>
+                    <span className="text-sm font-medium text-black w-14 flex-shrink-0">{slot}</span>
                     <div className={`flex-1 h-2.5 rounded-full ${lesson ? 'bg-teal-400' : full ? 'bg-red-200' : sel ? 'bg-blue-400' : 'bg-gray-100'}`} />
                     {lesson && <span className="text-xs font-semibold text-teal-600 flex-shrink-0">選択済 ✕</span>}
                     {!lesson && full && <span className="text-xs font-semibold text-red-500 flex-shrink-0">満席</span>}
@@ -521,21 +521,21 @@ export default function SchedulePage() {
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
               <div className="p-5 space-y-4">
-                <h2 className="text-base font-bold text-gray-800">選択済みの日時</h2>
+                <h2 className="text-base font-bold text-black">選択済みの日時</h2>
                 <div className="bg-teal-50 rounded-xl p-4 space-y-1">
                   <div className="text-sm font-semibold text-teal-700">{dateStr}</div>
                   <div className="text-lg font-bold text-teal-800">{timeStr}</div>
                 </div>
                 {!cancelConfirm ? (
                   <>
-                    <p className="text-sm text-gray-500">変更する場合は、この申込みをキャンセルしてから新しい日時を選んでください。</p>
+                    <p className="text-sm text-black">変更する場合は、この申込みをキャンセルしてから新しい日時を選んでください。</p>
                     <div className="space-y-2">
                       <button onClick={() => setCancelConfirm(true)}
                         className="w-full bg-red-50 text-red-600 border-2 border-red-200 py-3 rounded-xl text-sm font-bold active:bg-red-100">
                         キャンセルして変更する
                       </button>
                       <button onClick={() => { setCancelModal(null); setCancelConfirm(false) }}
-                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        className="w-full bg-gray-100 text-black py-3 rounded-xl text-sm font-medium active:bg-gray-200">
                         このままにする
                       </button>
                     </div>
@@ -552,7 +552,7 @@ export default function SchedulePage() {
                         はい、キャンセルします
                       </button>
                       <button onClick={() => setCancelConfirm(false)}
-                        className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-200">
+                        className="w-full bg-gray-100 text-black py-3 rounded-xl text-sm font-medium active:bg-gray-200">
                         やめる
                       </button>
                     </div>

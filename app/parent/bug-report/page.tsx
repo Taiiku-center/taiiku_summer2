@@ -55,8 +55,8 @@ export default function BugReportPage() {
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm text-center space-y-4">
           <div className="text-5xl">🔧</div>
-          <h2 className="text-xl font-bold text-gray-800">報告が送信されました</h2>
-          <p className="text-sm text-gray-500">ご不便をおかけしました。確認後に対応いたします。</p>
+          <h2 className="text-xl font-bold text-black">報告が送信されました</h2>
+          <p className="text-sm text-black">ご不便をおかけしました。確認後に対応いたします。</p>
           <button onClick={() => router.push('/parent')} className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">
             ホームに戻る
           </button>
@@ -68,10 +68,10 @@ export default function BugReportPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 text-xl transition-colors">‹</button>
+        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 text-black text-xl transition-colors">‹</button>
         <div>
-          <h1 className="text-base font-bold text-gray-800">不具合を報告する</h1>
-          <p className="text-xs text-gray-400">{student.full_name}</p>
+          <h1 className="text-base font-bold text-black">不具合を報告する</h1>
+          <p className="text-xs text-black">{student.full_name}</p>
         </div>
       </header>
       <main className="px-4 py-5 max-w-2xl mx-auto space-y-4">
@@ -85,19 +85,19 @@ export default function BugReportPage() {
         />
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">不具合が起きた画面</label>
+            <label className="block text-sm font-semibold text-black mb-2">不具合が起きた画面</label>
             <div className="space-y-2">
               {SCREENS.map(s => (
                 <button key={s} onClick={() => setScreenName(s)}
                   className={`w-full py-3 px-4 rounded-xl text-sm font-medium border-2 transition-all text-left
-                    ${screenName === s ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold' : 'border-gray-200 text-gray-600 hover:border-blue-300'}`}>
+                    ${screenName === s ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold' : 'border-gray-200 text-black hover:border-blue-300'}`}>
                   {s}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">不具合の内容</label>
+            <label className="block text-sm font-semibold text-black mb-2">不具合の内容</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)}
               placeholder="どのような問題が起きたか、できるだけ詳しく教えてください"
               rows={5}
